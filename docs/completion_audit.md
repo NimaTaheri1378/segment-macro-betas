@@ -18,6 +18,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Segment-set model extension is implemented | `src/segment_macro_betas/segment_set_model.py`; full Deep Sets run `20260531T010832Z_set`; full CUDA Set Transformer run `20260531T_set_transformer_full`. |
 | Official non-FRED macro API execution is implemented and executed | `src/segment_macro_betas/macro_engine.py`; private BLS/BEA/EIA run `20260531T_macro_nonfred_full` with 2,480 rows and `lookahead_safe=true`. |
 | Firm-geography-macro tensor is implemented and executed | `src/segment_macro_betas/macro_tensor.py`; private tensor run `20260531T_macro_tensor_nonfred_v2` with 936,897 panel rows, 2,811,167 joined token rows, 9 macro features, and 100% macro coverage. |
+| Limited revision-safe FRED macro chain is executed | Private FRED initial-release run `20260531T_fred_initial_release_guarded`, tensor run `20260531T_macro_tensor_fred_initial_release`, and model run `20260531T_lgbm_fred_initial_release`; the tensor reports `vintage_safe=true`. |
 | Factor-alpha and turnover robustness code is implemented | `src/segment_macro_betas/factor_robustness.py`; macro-aware private diagnostic run `20260531T_factor_robustness_macro_nonfred`. |
 | Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and macro-aware private claim-ledger run `20260531T_claim_ledger_macro_nonfred`. |
 | Publication-style diagnostic tables are implemented | `src/segment_macro_betas/publication_tables.py`, `scripts/run_publication_tables.sh`, and macro-aware private run `20260531T_publication_tables_macro_nonfred` with zero review failures. |
@@ -30,7 +31,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Requirement | Current State | Gate |
 |---|---|---|
 | Full FRED-inclusive macro catalog | Execute mode started the full catalog in `20260531T_macro_full_catalog_guarded_smoke`, completed two FRED series, and then stopped safely on HTTP `429` for `UNRATE`. | Wait before retrying; do not spam the FRED API. |
-| Fully revision-safe macro interactions | FRED realtime/initial-release catalog support is implemented and dry-run verified in `20260531T_fred_initial_release_dry`; the current non-FRED macro tensor is no-lookahead but `revision_safe=false`. | Requires executing a true realtime/vintage macro source after FRED rate-limit cooldown before final revision-safe claims. |
+| Broader revision-safe macro interactions | The limited FRED initial-release chain is revision-safe for included FRED series; the non-FRED macro tensor is no-lookahead but `revision_safe=false`. | Requires true realtime/vintage coverage for any additional macro sources before broader revision-safe claims. |
 
 ## Not Yet Final-Claim Ready
 
@@ -65,5 +66,5 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 
 The current release state is suitable for a public-safe code push only after
 the user explicitly authorizes creating/configuring the GitHub remote and
-pushing. It is not a final empirical paper package until the gated FRED,
-revision-safe macro, and 2026 holdout items are resolved.
+pushing. It is not a final empirical paper package until the broader full FRED
+catalog and future authorized 2026 holdout evaluation are resolved.

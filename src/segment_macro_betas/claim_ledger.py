@@ -84,6 +84,41 @@ def claim_row(
     }
 
 
+def macro_execution_claim(lgbm_run_id: str) -> dict[str, str]:
+    if "fred_initial_release" in lgbm_run_id:
+        return claim_row(
+            "Macro execution",
+            "Limited FRED initial-release macro interactions are live for the included FRED series.",
+            "passed diagnostic",
+            f"{lgbm_run_id}:lgbm_summary.csv; paired macro_engine and macro_tensor manifests",
+            (
+                "The FRED initial-release macro chain uses realtime availability dates and can be described as "
+                "revision-safe for the included FRED series."
+            ),
+            "The full FRED/BLS/BEA/EIA macro catalog is complete, or all macro interactions are final.",
+            "Keep this claim limited to the included FRED series; broader official-source and 2026 holdout claims remain gated.",
+        )
+    if "macro_nonfred" in lgbm_run_id:
+        return claim_row(
+            "Macro execution",
+            "Official non-FRED macro pulls are live with no-lookahead timing but not true vintage safety.",
+            "blocked by missing true revision vintages",
+            "configs/macro_series.yml; macro_engine and macro_tensor manifests",
+            "BLS, BEA, and EIA official macro data have been pulled into a no-lookahead macro tensor.",
+            "The non-FRED macro interactions are final revision-safe vintage interactions.",
+            "Use true realtime or vintage macro sources before making final revision-safe macro-beta claims.",
+        )
+    return claim_row(
+        "Macro execution",
+        "Official macro API and true vintage macro-tensor claims remain gated.",
+        "blocked by missing private secrets",
+        "configs/macro_series.yml; macro dry-run manifests",
+        "The public code can execute FRED/BLS/BEA/EIA pulls once untracked compute-host credentials are present.",
+        "The current empirical results include final vintage-safe macro interactions.",
+        "Run the live macro engine from an untracked `.env`, then build and review the macro tensor before making macro-beta claims.",
+    )
+
+
 def build_claim_ledger(
     *,
     panel_run_id: str,
@@ -203,17 +238,7 @@ def build_claim_ledger(
             )
         )
 
-    rows.append(
-        claim_row(
-            "Macro execution",
-            "Official macro API and true vintage macro-tensor claims remain gated.",
-            "blocked by missing private secrets",
-            "configs/macro_series.yml; macro dry-run manifests",
-            "The public code can execute FRED/BLS/BEA/EIA pulls once untracked compute-host credentials are present.",
-            "The current empirical results include final vintage-safe macro interactions.",
-            "Run the live macro engine from an untracked `.env`, then build and review the macro tensor before making macro-beta claims.",
-        )
-    )
+    rows.append(macro_execution_claim(lgbm_run_id))
     return pd.DataFrame(rows)
 
 
@@ -273,7 +298,7 @@ def report_text(manifest: dict[str, Any], ledger: pd.DataFrame, validation: pd.D
             "",
             "## Guardrail",
             "",
-            "Private diagnostics are research status notes until macro-vintage execution, final table review, and the untouched 2026 protocol are complete.",
+            "Private diagnostics are research status notes until final table review and the untouched 2026 holdout protocol are complete.",
             "",
         ]
     )

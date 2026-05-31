@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from segment_macro_betas.claim_ledger import build_claim_ledger, build_table_inventory, parse_run_ids, validate_claims
+from segment_macro_betas.claim_ledger import build_claim_ledger, build_table_inventory, macro_execution_claim, parse_run_ids, validate_claims
 
 
 class ClaimLedgerTests(unittest.TestCase):
@@ -72,6 +72,13 @@ class ClaimLedgerTests(unittest.TestCase):
         )
         validation = validate_claims(ledger)
         self.assertEqual(validation.loc[0, "status"], "fail")
+
+    def test_macro_execution_claim_distinguishes_fred_initial_release(self) -> None:
+        fred = macro_execution_claim("20260531T_lgbm_fred_initial_release")
+        nonfred = macro_execution_claim("20260531T_lgbm_macro_nonfred_v3")
+        self.assertEqual(fred["evidence_strength"], "passed diagnostic")
+        self.assertIn("revision-safe for the included FRED series", fred["allowed_wording"])
+        self.assertIn("blocked", nonfred["evidence_strength"])
 
     def test_parse_run_ids(self) -> None:
         self.assertEqual(parse_run_ids("set_a,set_b"), ["set_a", "set_b"])

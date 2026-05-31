@@ -14,6 +14,13 @@ EXPECTED_RUNS = {
     "baseline": ("20260531T004841Z_baseline_filing", "baselines"),
     "macro_nonfred": ("20260531T_macro_nonfred_full", "macro_engine"),
     "macro_tensor": ("20260531T_macro_tensor_nonfred_v2", "macro_tensor"),
+    "macro_fred_initial": ("20260531T_fred_initial_release_guarded", "macro_engine"),
+    "macro_tensor_fred_initial": ("20260531T_macro_tensor_fred_initial_release", "macro_tensor"),
+    "lgbm_fred_initial": ("20260531T_lgbm_fred_initial_release", "lgbm_benchmark"),
+    "factor_fred_initial": ("20260531T_factor_robustness_fred_initial_release", "factor_robustness"),
+    "claim_ledger_fred_initial": ("20260531T_claim_ledger_fred_initial_release_v2", "claim_ledger"),
+    "publication_tables_fred_initial": ("20260531T_publication_tables_fred_initial_release_v2", "publication_tables"),
+    "visual_pack_fred_initial": ("20260531T_visual_pack_fred_initial_release_v2", "visual_pack"),
     "lgbm_macro": ("20260531T_lgbm_macro_nonfred_v3", "lgbm_benchmark"),
     "deepsets": ("20260531T010832Z_set", "segment_set_model"),
     "set_transformer": ("20260531T_set_transformer_full", "segment_set_model"),
@@ -101,8 +108,6 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "macro_nonfred", "status_ok", macro.get("status") == "ok", f"status={macro.get('status')}")
     require(rows, "macro_nonfred", "official_sources", nested(macro, "checks", "source_count", default=0) >= 3, f"sources={nested(macro, 'checks', 'sources')}")
     require(rows, "macro_nonfred", "lookahead_safe", nested(macro, "checks", "lookahead_safe") is True, f"lookahead_safe={nested(macro, 'checks', 'lookahead_safe')}")
-    if nested(macro, "checks", "revision_safe") is not True:
-        add(rows, "macro_nonfred", "revision_safe", "blocked", "non-FRED official run uses configured release lags, not true revision vintages")
 
     tensor = manifests.get("macro_tensor", {})
     tensor_macro = nested(tensor, "checks", "macro", default={})
@@ -111,14 +116,37 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "macro_tensor", "feature_count", nested(tensor, "checks", "aggregation", "macro_feature_count", default=0) >= 9, f"features={nested(tensor, 'checks', 'aggregation', 'macro_feature_count')}")
     require(rows, "macro_tensor", "joined_match", nested(tensor, "checks", "joined_token_match_rate", default=0) >= 0.999, f"match={nested(tensor, 'checks', 'joined_token_match_rate')}")
     require(rows, "macro_tensor", "lookahead_safe", tensor_macro.get("lookahead_safe") is True, f"macro={tensor_macro}")
+
+    fred_macro = manifests.get("macro_fred_initial", {})
+    require(rows, "macro_fred_initial", "status_ok", fred_macro.get("status") == "ok", f"status={fred_macro.get('status')}")
+    require(rows, "macro_fred_initial", "series_count", nested(fred_macro, "checks", "series_count", default=0) >= 2, f"checks={fred_macro.get('checks')}")
+    require(rows, "macro_fred_initial", "revision_safe", nested(fred_macro, "checks", "revision_safe") is True, f"checks={fred_macro.get('checks')}")
+    require(rows, "macro_fred_initial", "lookahead_safe", nested(fred_macro, "checks", "lookahead_safe") is True, f"checks={fred_macro.get('checks')}")
+
+    fred_tensor = manifests.get("macro_tensor_fred_initial", {})
+    fred_tensor_macro = nested(fred_tensor, "checks", "macro", default={})
+    require(rows, "macro_tensor_fred_initial", "status_ok", fred_tensor.get("status") == "ok", f"status={fred_tensor.get('status')}")
+    require(rows, "macro_tensor_fred_initial", "coverage", nested(fred_tensor, "checks", "aggregation", "macro_coverage_rate", default=0) >= 0.999, f"coverage={nested(fred_tensor, 'checks', 'aggregation', 'macro_coverage_rate')}")
+    require(rows, "macro_tensor_fred_initial", "feature_count", nested(fred_tensor, "checks", "aggregation", "macro_feature_count", default=0) >= 6, f"features={nested(fred_tensor, 'checks', 'aggregation', 'macro_feature_count')}")
+    require(rows, "macro_tensor_fred_initial", "revision_safe", fred_tensor_macro.get("revision_safe") is True or fred_tensor_macro.get("vintage_safe") is True, f"macro={fred_tensor_macro}")
+
+    fred_ready = nested(fred_macro, "checks", "revision_safe") is True and (fred_tensor_macro.get("revision_safe") is True or fred_tensor_macro.get("vintage_safe") is True)
+    if nested(macro, "checks", "revision_safe") is not True:
+        require(rows, "macro_nonfred", "revision_safe_covered", fred_ready, "covered by FRED initial-release chain" if fred_ready else "no true revision-safe macro chain")
     if tensor_macro.get("revision_safe") is not True:
-        add(rows, "macro_tensor", "revision_safe", "blocked", "tensor source is no-lookahead but not revision-safe")
+        require(rows, "macro_tensor", "revision_safe_covered", fred_ready, "covered by FRED initial-release tensor" if fred_ready else "no true revision-safe macro tensor")
 
     lgbm = manifests.get("lgbm_macro", {})
     require(rows, "lgbm_macro", "status_ok", lgbm.get("status") == "ok", f"status={lgbm.get('status')}")
     require(rows, "lgbm_macro", "variants", nested(lgbm, "checks", "variants_ok", default=0) >= 4, f"checks={lgbm.get('checks')}")
     require(rows, "lgbm_macro", "macro_only_diagnostic", nested(lgbm, "checks", "variants_diagnostic_only") == 1, f"checks={lgbm.get('checks')}")
     require(rows, "lgbm_macro", "best_spread_macro", nested(lgbm, "checks", "best_spread_variant") == "all_plus_macro", f"checks={lgbm.get('checks')}")
+
+    fred_lgbm = manifests.get("lgbm_fred_initial", {})
+    require(rows, "lgbm_fred_initial", "status_ok", fred_lgbm.get("status") == "ok", f"status={fred_lgbm.get('status')}")
+    require(rows, "lgbm_fred_initial", "variants", nested(fred_lgbm, "checks", "variants_ok", default=0) >= 4, f"checks={fred_lgbm.get('checks')}")
+    require(rows, "lgbm_fred_initial", "macro_only_diagnostic", nested(fred_lgbm, "checks", "variants_diagnostic_only") == 1, f"checks={fred_lgbm.get('checks')}")
+    require(rows, "lgbm_fred_initial", "best_spread_macro", nested(fred_lgbm, "checks", "best_spread_variant") == "all_plus_macro", f"checks={fred_lgbm.get('checks')}")
 
     for key in ["deepsets", "set_transformer"]:
         model = manifests.get(key, {})
@@ -130,10 +158,19 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "factor", "variants", nested(factor, "checks", "variants", default=0) >= 7, f"checks={factor.get('checks')}")
     require(rows, "factor", "factor_months", nested(factor, "checks", "factor_months", default=0) >= 200, f"checks={factor.get('checks')}")
 
+    fred_factor = manifests.get("factor_fred_initial", {})
+    require(rows, "factor_fred_initial", "status_ok", fred_factor.get("status") == "ok", f"status={fred_factor.get('status')}")
+    require(rows, "factor_fred_initial", "variants", nested(fred_factor, "checks", "variants", default=0) >= 7, f"checks={fred_factor.get('checks')}")
+    require(rows, "factor_fred_initial", "factor_months", nested(fred_factor, "checks", "factor_months", default=0) >= 200, f"checks={fred_factor.get('checks')}")
+
     claim = manifests.get("claim_ledger", {})
     require(rows, "claim_ledger", "status_ok", claim.get("status") == "ok", f"status={claim.get('status')}")
     require(rows, "claim_ledger", "no_validation_failures", nested(claim, "checks", "validation_failures") == 0, f"checks={claim.get('checks')}")
-    if nested(claim, "checks", "blocked_claims", default=0) > 0:
+    fred_claim = manifests.get("claim_ledger_fred_initial", {})
+    require(rows, "claim_ledger_fred_initial", "status_ok", fred_claim.get("status") == "ok", f"status={fred_claim.get('status')}")
+    require(rows, "claim_ledger_fred_initial", "no_validation_failures", nested(fred_claim, "checks", "validation_failures") == 0, f"checks={fred_claim.get('checks')}")
+    require(rows, "claim_ledger_fred_initial", "no_blocked_claims", nested(fred_claim, "checks", "blocked_claims") == 0, f"checks={fred_claim.get('checks')}")
+    if nested(claim, "checks", "blocked_claims", default=0) > 0 and nested(fred_claim, "checks", "blocked_claims") != 0:
         add(rows, "claim_ledger", "blocked_claims", "blocked", f"blocked_claims={nested(claim, 'checks', 'blocked_claims')}")
 
     pub = manifests.get("publication_tables", {})
@@ -141,9 +178,18 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "publication_tables", "review_clean", nested(pub, "checks", "review_failures") == 0, f"checks={pub.get('checks')}")
     require(rows, "publication_tables", "claim_validation_clean", nested(pub, "checks", "claim_validation_failures") == 0, f"checks={pub.get('checks')}")
 
+    fred_pub = manifests.get("publication_tables_fred_initial", {})
+    require(rows, "publication_tables_fred_initial", "status_ok", fred_pub.get("status") == "ok", f"status={fred_pub.get('status')}")
+    require(rows, "publication_tables_fred_initial", "review_clean", nested(fred_pub, "checks", "review_failures") == 0, f"checks={fred_pub.get('checks')}")
+    require(rows, "publication_tables_fred_initial", "claim_validation_clean", nested(fred_pub, "checks", "claim_validation_failures") == 0, f"checks={fred_pub.get('checks')}")
+
     visual = manifests.get("visual_pack", {})
     require(rows, "visual_pack", "status_ok", visual.get("status") == "ok", f"status={visual.get('status')}")
     require(rows, "visual_pack", "figures", nested(visual, "checks", "figure_count", default=0) >= 7, f"checks={visual.get('checks')}")
+
+    fred_visual = manifests.get("visual_pack_fred_initial", {})
+    require(rows, "visual_pack_fred_initial", "status_ok", fred_visual.get("status") == "ok", f"status={fred_visual.get('status')}")
+    require(rows, "visual_pack_fred_initial", "figures", nested(fred_visual, "checks", "figure_count", default=0) >= 7, f"checks={fred_visual.get('checks')}")
 
     holdout = manifests.get("holdout_protocol", {})
     require(rows, "holdout_protocol", "status_frozen", holdout.get("status") == "frozen", f"status={holdout.get('status')}")

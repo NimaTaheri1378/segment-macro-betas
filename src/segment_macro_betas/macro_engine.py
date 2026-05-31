@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -363,6 +364,10 @@ def macro_fetch_error(series: dict[str, Any], exc: Exception) -> dict[str, Any]:
     if isinstance(exc, HTTPError):
         detail["http_status"] = int(exc.code)
         detail["http_reason"] = str(exc.reason)
+        detail["rate_limited"] = int(exc.code) == 429
+        retry_after = exc.headers.get("Retry-After") if exc.headers else None
+        if retry_after:
+            detail["retry_after"] = str(retry_after)
     if isinstance(exc, URLError):
         detail["url_reason"] = str(exc.reason)
     return detail
@@ -374,7 +379,21 @@ def write_macro_manifest(paths, manifest: dict[str, Any]) -> dict[str, Any]:
     return manifest
 
 
-def run_macro(project_root: Path, run_id: str, start: str, end: str, execute: bool, series_config: Path | None = None) -> dict:
+def write_macro_frame(project_root: Path, run_id: str, macro: pd.DataFrame, filename: str) -> Path:
+    out_path = ensure_within(project_root, project_root / "data" / "raw" / run_id / filename)
+    atomic_write_parquet(macro, out_path)
+    return out_path
+
+
+def run_macro(
+    project_root: Path,
+    run_id: str,
+    start: str,
+    end: str,
+    execute: bool,
+    series_config: Path | None = None,
+    request_delay_seconds: float = 0.0,
+) -> dict:
     paths = make_run_paths(project_root, run_id)
     env_values = {**read_env_file(project_root / ".env"), **os.environ}
     catalog = load_series_catalog(project_root, series_config)
@@ -385,6 +404,7 @@ def run_macro(project_root: Path, run_id: str, start: str, end: str, execute: bo
         "start": start,
         "end": end,
         "execute": execute,
+        "request_delay_seconds": request_delay_seconds,
         "series": [{key: item[key] for key in ("source", "series_id", "series_name", "macro_area", "release_lag_days", "timing", "revision_safe")} for item in catalog],
         "outputs": {},
         "status": "planned",
@@ -407,21 +427,28 @@ def run_macro(project_root: Path, run_id: str, start: str, end: str, execute: bo
         return write_macro_manifest(paths, manifest)
 
     frames = []
-    for series in catalog:
+    for index, series in enumerate(catalog):
         try:
             frames.append(fetch_series(series, env_values, start, end))
         except Exception as exc:
+            if frames:
+                partial = pd.concat(frames, ignore_index=True)
+                partial_path = write_macro_frame(project_root, run_id, partial, "macro_official_monthly.partial.parquet")
+                manifest["outputs"]["partial_macro_monthly"] = str(partial_path)
+                manifest["partial_rows"] = int(len(partial))
             manifest["status"] = "api_error"
             manifest["api_errors"] = [macro_fetch_error(series, exc)]
             manifest["checks"] = {
                 "series_attempted": len(frames) + 1,
                 "series_completed": len(frames),
                 "series_total": len(catalog),
+                "partial_output_written": bool(frames),
             }
             return write_macro_manifest(paths, manifest)
+        if request_delay_seconds > 0 and index < len(catalog) - 1:
+            time.sleep(request_delay_seconds)
     macro = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
-    out_path = ensure_within(project_root, project_root / "data" / "raw" / run_id / "macro_official_monthly.parquet")
-    atomic_write_parquet(macro, out_path)
+    out_path = write_macro_frame(project_root, run_id, macro, "macro_official_monthly.parquet")
     manifest["outputs"]["macro_monthly"] = str(out_path)
     manifest["rows"] = int(len(macro))
     manifest["checks"] = {
@@ -468,12 +495,13 @@ def main() -> int:
     parser.add_argument("--end", default="2025-12-31")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--series-config", default=None)
+    parser.add_argument("--request-delay-seconds", type=float, default=float(os.environ.get("MACRO_REQUEST_DELAY_SECONDS", "0")))
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)
     series_config = Path(args.series_config) if args.series_config else None
     if series_config and not series_config.is_absolute():
         series_config = project_root / series_config
-    manifest = run_macro(project_root, args.run_id, args.start, args.end, args.execute, series_config)
+    manifest = run_macro(project_root, args.run_id, args.start, args.end, args.execute, series_config, args.request_delay_seconds)
     print(f"status={manifest['status']}")
     print(f"manifest={project_root / 'runs' / args.run_id / 'manifests' / 'macro_engine.json'}")
     return 0 if manifest["status"] in {"ok", "dry_run_ok"} else 1

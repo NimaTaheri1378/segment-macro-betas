@@ -75,8 +75,9 @@ requests. `fred_initial_release` requests initial-release observations, while
 `fred_vintage_all` and `fred_vintage_changes` request broader vintage panels.
 Those rows use the FRED `realtime_start` field as their availability date, so
 the macro tensor can join the latest macro value actually known by each
-firm-month. The code path is implemented, but execution remains gated by FRED
-rate limits and private API credentials.
+firm-month. A private FRED initial-release run has executed for a limited
+two-series catalog; broader full-catalog FRED/BLS/BEA/EIA execution remains a
+separate gate.
 
 The visual pack is generated from private manifests and ignored artifacts. It
 collects sample coverage, filing-date activation coverage, exposure

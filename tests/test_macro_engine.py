@@ -1,6 +1,9 @@
+import io
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
+from urllib.error import HTTPError
 
 import pandas as pd
 
@@ -13,6 +16,7 @@ from segment_macro_betas.macro_engine import (
     normalise_series_config,
     parse_period_to_date,
     read_env_file,
+    run_macro,
     standard_macro_frame,
 )
 
@@ -103,6 +107,59 @@ class MacroEngineTests(unittest.TestCase):
         self.assertEqual(out["series_id"], "FEDFUNDS")
         self.assertIn("429", out["message"])
         self.assertNotIn("API_KEY", str(out))
+
+    def test_macro_fetch_error_records_rate_limit_metadata(self) -> None:
+        series = {"source": "fred", "series_id": "UNRATE", "series_name": "us_unemployment"}
+        exc = HTTPError("https://example.test/no-key", 429, "Too Many Requests", {"Retry-After": "60"}, io.BytesIO(b""))
+        try:
+            out = macro_fetch_error(series, exc)
+        finally:
+            exc.close()
+        self.assertEqual(out["http_status"], 429)
+        self.assertTrue(out["rate_limited"])
+        self.assertEqual(out["retry_after"], "60")
+
+    def test_run_macro_writes_partial_cache_on_api_error(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "macro.yml"
+            config.write_text(
+                "\n".join(
+                    [
+                        "series:",
+                        "  - source: fred",
+                        "    series_id: FEDFUNDS",
+                        "    series_name: federal_funds_rate",
+                        "    macro_area: GLOBAL",
+                        "  - source: fred",
+                        "    series_id: UNRATE",
+                        "    series_name: us_unemployment",
+                        "    macro_area: GLOBAL",
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            (root / ".env").write_text("FRED_API_KEY=dummy\n", encoding="utf-8")
+            first_frame = standard_macro_frame(
+                pd.DataFrame({"date": ["2020-01-31"], "value": [1.5]}),
+                {
+                    "source": "fred",
+                    "series_id": "FEDFUNDS",
+                    "series_name": "federal_funds_rate",
+                    "macro_area": "GLOBAL",
+                    "release_lag_days": 0,
+                    "timing": "configured_release_lag",
+                    "revision_safe": False,
+                },
+            )
+            with patch("segment_macro_betas.macro_engine.fetch_series", side_effect=[first_frame, RuntimeError("boom")]):
+                manifest = run_macro(root, "run", "2020-01-01", "2020-12-31", True, config)
+
+        self.assertEqual(manifest["status"], "api_error")
+        self.assertEqual(manifest["checks"]["series_completed"], 1)
+        self.assertEqual(manifest["checks"]["partial_output_written"], True)
+        self.assertEqual(manifest["partial_rows"], 1)
+        self.assertIn("partial_macro_monthly", manifest["outputs"])
 
 
 if __name__ == "__main__":

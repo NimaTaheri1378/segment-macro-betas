@@ -13,7 +13,7 @@ Implemented public code:
 - Public FRED/BLS/BEA/EIA macro-series catalog plus cached macro tensor
   construction with timing flags.
 - FRED realtime and initial-release catalog support for revision-safe macro
-  experiments once API rate limits permit execution.
+  experiments, with a limited private FRED initial-release chain executed.
 - Expanding-window LightGBM benchmark with feature ablations and optional
   macro-aware panel datasets.
 - Deep Sets segment-set benchmark plus full CUDA Set Transformer diagnostic.
@@ -41,10 +41,11 @@ status notes, not as final paper claims.
 Known gated items:
 
 - Official non-FRED macro execution has run privately from an untracked
-  compute-host `.env`; the full FRED-inclusive catalog is currently blocked by
-  HTTP `429` rate limiting.
-- Full revision-safe macro interactions require private cached macro files with
-  true vintage or realtime availability dates.
+  compute-host `.env`; a limited FRED initial-release chain has also run with
+  true realtime availability dates. The broader full FRED-inclusive catalog is
+  still blocked by HTTP `429` rate limiting.
+- Revision-safe macro evidence currently applies only to the included FRED
+  initial-release series.
 - Final transaction-cost/capacity claims and 2026 holdout performance remain
   future stages; the holdout freeze records the protocol, not the holdout
   result.

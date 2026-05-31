@@ -46,6 +46,10 @@ For FRED series, catalog rows can request real-time output by using
 the resulting rows as revision-safe. The example catalog
 `configs/macro_series_fred_initial_release.example.yml` is intentionally not
 the default because live FRED execution must respect API rate limits.
+For guarded live retries, `MACRO_REQUEST_DELAY_SECONDS` adds spacing between
+series requests. If a later series fails, the macro engine records the error and
+writes only a private partial cache; the manifest status remains `api_error` so
+partial data cannot be mistaken for a complete catalog.
 
 The factor robustness runner reads cached model prediction Parquet files under
 `artifacts/tables/<model_run_id>/` and benchmark factor columns from the

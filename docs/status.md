@@ -69,6 +69,17 @@ Latest private official macro diagnostic:
 - Window: 2006-2025 development sample.
 - Timing flags: `lookahead_safe=true`, `revision_safe=false`.
 
+Latest private FRED initial-release diagnostic:
+
+- Macro run: `20260531T_fred_initial_release_guarded`.
+- Sources: FRED only.
+- Series: initial-release CPI and unemployment.
+- Macro rows: `480`.
+- Window: 2006-2025 development sample.
+- Timing flags: `lookahead_safe=true`, `revision_safe=true`.
+- Request discipline: one guarded run with `MACRO_REQUEST_DELAY_SECONDS=2`;
+  no API errors and no credential values in manifests.
+
 Latest private macro tensor diagnostic:
 
 - Run: `20260531T_macro_tensor_nonfred_v2`.
@@ -81,6 +92,19 @@ Latest private macro tensor diagnostic:
 - Macro coverage rate: `1.0`.
 - Macro availability source: `available_date`.
 - Timing flags: `lookahead_safe=true`, `revision_safe=false`.
+
+Latest private revision-safe FRED macro tensor:
+
+- Run: `20260531T_macro_tensor_fred_initial_release`.
+- Macro run: `20260531T_fred_initial_release_guarded`.
+- Panel run: `20260531T003936Z_panel_filing`.
+- Panel rows: `936897`.
+- Joined token rows: `2811167`.
+- Joined token match rate: `1.0`.
+- Macro feature count: `6`.
+- Macro coverage rate: `1.0`.
+- Macro availability source: `available_date`.
+- Timing flag: `vintage_safe=true`.
 
 Latest private macro-aware LightGBM diagnostic:
 
@@ -100,6 +124,20 @@ Latest private macro-aware LightGBM diagnostic:
 - LightGBM requested GPU in auto mode, detected the installed build lacks the
   GPU tree learner, disabled further GPU attempts after the first failure per
   variant, and recorded CPU fallback in the manifest.
+
+Latest private revision-safe FRED LightGBM diagnostic:
+
+- Run: `20260531T_lgbm_fred_initial_release`.
+- Panel dataset: `macro_tensor_panel` from
+  `20260531T_macro_tensor_fred_initial_release`.
+- Feature rows: `926895`.
+- Prediction rows per variant: `772000`.
+- Variants: 4 cross-sectional variants `ok`, plus `macro_only` marked
+  `diagnostic_only`.
+- Best rank-IC variant: `segment_only`, mean rank IC `0.036475`.
+- Best Q5-Q1 spread variant: `all_plus_macro`, mean Q5-Q1 `0.008831`,
+  t-stat `2.848604`.
+- `all_plus_macro`: mean rank IC `0.024862`, t-stat `3.257238`.
 
 Latest private macro-aware factor robustness diagnostic:
 
@@ -121,6 +159,19 @@ Latest private macro-aware factor robustness diagnostic:
 - Full Set Transformer robustness: mean net Q5-Q1 `0.000367`, t-stat
   `0.282725`, gross monthly alpha `-0.003558`.
 
+Latest private revision-safe FRED factor robustness diagnostic:
+
+- Run: `20260531T_factor_robustness_fred_initial_release`.
+- Model runs: `20260531T_lgbm_fred_initial_release`,
+  `20260531T010832Z_set`, and `20260531T_set_transformer_full`.
+- Spread-capable variants evaluated: `7`.
+- Spread-month rows: `1337`.
+- Factor months available: `239`.
+- Best net Q5-Q1 variant: `lgbm:all_plus_macro`, mean net Q5-Q1
+  `0.008304`, t-stat `2.678754`.
+- Best gross alpha t-stat variant: `lgbm:non_segment_controls`, gross monthly
+  alpha `0.005865`, t-stat `1.676543`.
+
 Latest private claim ledger:
 
 - Run: `20260531T_claim_ledger_macro_nonfred`.
@@ -130,6 +181,15 @@ Latest private claim ledger:
 - Table-inventory rows: `40`.
 - Allowed wording is diagnostic-only and keeps macro-vintage and 2026 holdout
   claims blocked.
+
+Latest private revision-safe FRED claim ledger:
+
+- Run: `20260531T_claim_ledger_fred_initial_release_v2`.
+- Claim rows: `7`.
+- Validation failures: `0`.
+- Blocked claims: `0`.
+- Allowed macro wording is limited to the included FRED initial-release series;
+  broader full-catalog and 2026 holdout claims remain gated.
 
 Latest private publication-style diagnostic tables:
 
@@ -146,6 +206,18 @@ Latest private publication-style diagnostic tables:
 - Reports generated as ignored private Markdown/LaTeX artifacts under `runs/`;
   table CSVs generated under ignored `artifacts/tables/`.
 
+Latest private revision-safe FRED publication-style diagnostic tables:
+
+- Run: `20260531T_publication_tables_fred_initial_release_v2`.
+- Inputs: FRED initial-release LightGBM
+  `20260531T_lgbm_fred_initial_release`, factor robustness
+  `20260531T_factor_robustness_fred_initial_release`, and claim ledger
+  `20260531T_claim_ledger_fred_initial_release_v2`.
+- Model-comparison rows: `8`.
+- Factor-alpha and cost rows: `7`.
+- Review failures: `0`.
+- Claim-validation failures: `0`.
+
 Latest private visual pack:
 
 - Run: `20260531T_visual_pack_macro_nonfred_v2`.
@@ -155,6 +227,17 @@ Latest private visual pack:
 - Sector-geography matrix shape: `10 x 10`.
 - Dashboard: ignored private HTML artifact under `artifacts/figures_html/`.
 - Model card: ignored private report under `runs/`.
+
+Latest private revision-safe FRED visual pack:
+
+- Run: `20260531T_visual_pack_fred_initial_release_v2`.
+- Figure count: `7`.
+- Model comparison rows: `8`.
+- Firm explorer rows: `30`.
+- Sector-geography matrix shape: `10 x 10`.
+- Model card now states that FRED initial-release diagnostics are revision-safe
+  only for the included FRED series and that the broader full catalog remains
+  incomplete.
 
 Latest private holdout protocol:
 
@@ -180,9 +263,8 @@ Latest public release-prep check:
   audit, public safety scan, and 68 unit tests.
 - Private manifest frontier audits `20260531T_private_state_audit` locally and
   `20260531T_private_state_audit_remote` on allocation `5752806` passed with
-  `60` checks passed, zero failures, and four explicit blockers: non-FRED
-  revision safety, macro tensor revision safety, claim-ledger blocked wording,
-  and the FRED `429` full-catalog gate.
+  `92` checks passed, zero failures, and one explicit blocker: the broader
+  FRED `429` full-catalog gate.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
@@ -208,9 +290,9 @@ Latest macro-tensor code status:
   by HTTP `429` rate limiting and should not be retried aggressively.
 - FRED initial-release/realtime support is implemented through
   `timing: fred_initial_release`, `fred_vintage_all`, and
-  `fred_vintage_changes`. Dry run `20260531T_fred_initial_release_dry`
-  locally and `20260531T_fred_initial_release_dry_remote` on allocation
-  `5752806` verified the example catalog without making a network call.
+  `fred_vintage_changes`. The limited live run
+  `20260531T_fred_initial_release_guarded` executed the example catalog with
+  true realtime availability dates.
 
 Latest GPU modeling code status:
 
@@ -236,8 +318,10 @@ Private artifacts remain ignored:
 
 Next stages:
 
-- Wait before retrying the full FRED-inclusive macro catalog; do not spam FRED.
-- Add or source revision-safe macro vintages if final vintage claims are needed.
+- Wait before retrying the broader full FRED-inclusive macro catalog; do not
+  spam FRED.
+- Keep revision-safe wording limited to the included FRED initial-release
+  series until broader realtime/vintage sources are added.
 - Interpret the LightGBM ablation carefully: segment-only features rank returns
   well, while the non-FRED `all_plus_macro` variant currently produces the
   strongest long-short spread and factor-alpha diagnostics.

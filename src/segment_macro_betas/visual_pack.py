@@ -324,7 +324,21 @@ def write_dashboard(html_dir: Path, run_id: str, figures: dict[str, Path], compa
     return out
 
 
-def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, Any], comparison: pd.DataFrame) -> Path:
+def macro_guardrail_for_run(lgbm_run_id: str) -> str:
+    if "fred_initial_release" in lgbm_run_id:
+        return (
+            "- Limited FRED initial-release diagnostics are live and revision-safe for the included FRED series; "
+            "the broader full FRED/BLS/BEA/EIA catalog remains incomplete."
+        )
+    if "macro_nonfred" in lgbm_run_id:
+        return (
+            "- Official non-FRED macro diagnostics are live with no-lookahead timing; "
+            "revision-safe macro claims remain blocked until true vintage sources are used."
+        )
+    return "- Macro diagnostics should remain tied to the specific private manifest used for this model card."
+
+
+def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, Any], comparison: pd.DataFrame, lgbm_run_id: str) -> Path:
     checks = panel_manifest["checks"]
 
     def metric(value: Any) -> str:
@@ -360,7 +374,7 @@ def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, An
             "- Segment-only tabular features rank returns strongly, but control-rich variants produce stronger long-short spreads.",
             "- The first Deep Sets extension has modest positive rank IC in the set-only variant and weak long-short spread.",
             "- The full Set Transformer run is a CUDA-validated architecture diagnostic, not a dominant economic spread result.",
-            "- Official non-FRED macro diagnostics are live, while full FRED and revision-safe macro claims remain blocked.",
+            macro_guardrail_for_run(lgbm_run_id),
             "",
         ]
     )
@@ -411,7 +425,7 @@ def run_visual_pack(
         **save_model_comparison(figures_dir, comparison),
     }
     dashboard = write_dashboard(html_dir, run_id, figures, comparison, firm_explorer)
-    model_card = write_model_card(paths.reports, run_id, panel_manifest, comparison)
+    model_card = write_model_card(paths.reports, run_id, panel_manifest, comparison, lgbm_run_id)
     manifest = {
         "run_id": run_id,
         "created_utc": now_iso(),

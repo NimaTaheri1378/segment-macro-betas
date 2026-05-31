@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from segment_macro_betas.visual_pack import build_model_comparison, fmt, parse_run_ids, sic_sector, write_dashboard
+from segment_macro_betas.visual_pack import build_model_comparison, fmt, macro_guardrail_for_run, parse_run_ids, sic_sector, write_dashboard
 
 
 class VisualPackTests(unittest.TestCase):
@@ -50,6 +50,12 @@ class VisualPackTests(unittest.TestCase):
         self.assertEqual(parse_run_ids("a,b"), ["a", "b"])
         with self.assertRaises(ValueError):
             parse_run_ids("")
+
+    def test_macro_guardrail_distinguishes_fred_initial_release(self) -> None:
+        fred = macro_guardrail_for_run("20260531T_lgbm_fred_initial_release")
+        nonfred = macro_guardrail_for_run("20260531T_lgbm_macro_nonfred_v3")
+        self.assertIn("revision-safe for the included FRED series", fred)
+        self.assertIn("revision-safe macro claims remain blocked", nonfred)
 
     def test_dashboard_uses_relative_static_figure_paths(self) -> None:
         comparison = pd.DataFrame({"variant": ["all"], "mean_rank_ic": [0.1]})

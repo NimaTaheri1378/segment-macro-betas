@@ -18,6 +18,8 @@ Allowed current wording:
 - The macro-aware `all_plus_macro` LightGBM diagnostic has the strongest
   current long-short spread and factor-alpha diagnostics in the development
   sample.
+- Limited FRED initial-release diagnostics are live and revision-safe for the
+  included FRED series only.
 - The `macro_only` diagnostic is not cross-sectional because the current
   official macro inputs are global monthly states.
 - Deep Sets validates the segment-set modeling path, but does not currently
@@ -35,8 +37,8 @@ Forbidden current wording:
   to standard factors.
 - The full FRED-inclusive macro catalog is complete while the FRED API remains
   rate-limited.
-- Macro-vintage or revision-safe interactions are final before true vintage or
-  realtime macro sources are reviewed.
+- All macro interactions are final revision-safe evidence when only the limited
+  FRED initial-release subset has been executed.
 - 2026 holdout performance is known before the holdout protocol is explicitly
   opened.
 - A frozen holdout protocol is the same as a passed 2026 performance result.

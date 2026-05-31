@@ -80,6 +80,9 @@ EXECUTE=0 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT"
 The macro catalog lives in `configs/macro_series.yml` and supports FRED, BLS,
 BEA, and EIA rows. Live execution requires an untracked compute-host `.env`;
 manifests record credential presence and timing flags, never credential values.
+Set `MACRO_REQUEST_DELAY_SECONDS` for cautious live API retries; if a later
+series fails, the macro engine writes a private `.partial.parquet` cache for
+completed series while keeping the run status as `api_error`.
 For revision-safe FRED experiments, use a private copy of
 `configs/macro_series_fred_initial_release.example.yml`; it requests
 initial-release observations and uses FRED `realtime_start` as the availability

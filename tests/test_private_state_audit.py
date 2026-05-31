@@ -59,15 +59,40 @@ class PrivateStateAuditTests(unittest.TestCase):
             )
             write_manifest(
                 root,
+                "macro_fred_initial",
+                {"status": "ok", "checks": {"series_count": 2, "lookahead_safe": True, "revision_safe": True}},
+            )
+            write_manifest(
+                root,
+                "macro_tensor_fred_initial",
+                {
+                    "status": "ok",
+                    "checks": {
+                        "aggregation": {"macro_coverage_rate": 1.0, "macro_feature_count": 6},
+                        "macro": {"vintage_safe": True},
+                    },
+                },
+            )
+            write_manifest(
+                root,
                 "lgbm_macro",
+                {"status": "ok", "checks": {"variants_ok": 4, "variants_diagnostic_only": 1, "best_spread_variant": "all_plus_macro"}},
+            )
+            write_manifest(
+                root,
+                "lgbm_fred_initial",
                 {"status": "ok", "checks": {"variants_ok": 4, "variants_diagnostic_only": 1, "best_spread_variant": "all_plus_macro"}},
             )
             write_manifest(root, "deepsets", {"status": "ok", "checks": {"variants_ok": 2}})
             write_manifest(root, "set_transformer", {"status": "ok", "checks": {"variants_ok": 1}})
             write_manifest(root, "factor", {"status": "ok", "checks": {"variants": 7, "factor_months": 239}})
+            write_manifest(root, "factor_fred_initial", {"status": "ok", "checks": {"variants": 7, "factor_months": 239}})
             write_manifest(root, "claim_ledger", {"status": "ok", "checks": {"validation_failures": 0, "blocked_claims": 1}})
+            write_manifest(root, "claim_ledger_fred_initial", {"status": "ok", "checks": {"validation_failures": 0, "blocked_claims": 0}})
             write_manifest(root, "publication_tables", {"status": "ok", "checks": {"review_failures": 0, "claim_validation_failures": 0}})
+            write_manifest(root, "publication_tables_fred_initial", {"status": "ok", "checks": {"review_failures": 0, "claim_validation_failures": 0}})
             write_manifest(root, "visual_pack", {"status": "ok", "checks": {"figure_count": 7}})
+            write_manifest(root, "visual_pack_fred_initial", {"status": "ok", "checks": {"figure_count": 7}})
             write_manifest(
                 root,
                 "holdout_protocol",
