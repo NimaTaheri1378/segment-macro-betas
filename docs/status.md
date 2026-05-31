@@ -13,6 +13,8 @@ Implemented stages:
   filing-date ablation run `20260531T005001Z_lgbm_filing`.
 - Deep Sets segment-set model code, Slurm runner, and full-panel run
   `20260531T010832Z_set`.
+- Visual pack and model-card generator, with private visual pack run
+  `20260531T_visual_pack`.
 - Smoke and baseline figures generated from private artifacts.
 
 Latest private LightGBM ablation diagnostic:
@@ -40,6 +42,16 @@ Latest private Deep Sets segment-set diagnostic:
 - `set_only`: mean rank IC `0.011294`, mean Q5-Q1 `0.001139`.
 - `set_plus_controls`: mean rank IC `-0.006154`, mean Q5-Q1 `0.002959`.
 
+Latest private visual pack:
+
+- Run: `20260531T_visual_pack`.
+- Figure count: `7`.
+- Model comparison rows: `7`.
+- Firm explorer rows: `30`.
+- Sector-geography matrix shape: `10 x 10`.
+- Dashboard: ignored private HTML artifact under `artifacts/figures_html/`.
+- Model card: ignored private report under `runs/`.
+
 Private artifacts remain ignored:
 
 - `runs/`
@@ -58,4 +70,4 @@ Next stages:
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.
-- Publication-safe figure and model-card selection.
+- Final public-safe repository audit and release notes.

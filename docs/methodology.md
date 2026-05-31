@@ -42,3 +42,8 @@ benchmark uses a Deep Sets encoder with geography-token embeddings and
 revenue-share weights. It reports a `set_only` variant and a
 `set_plus_controls` variant under the same expanding yearly validation design
 as the tabular benchmarks.
+
+The visual pack is generated from private manifests and ignored artifacts. It
+collects sample coverage, filing-date activation coverage, exposure
+distributions, sector-geography exposure, model-comparison metrics, a firm
+explorer snapshot, an HTML dashboard, and a model card with claim guardrails.

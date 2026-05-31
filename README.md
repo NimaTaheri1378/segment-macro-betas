@@ -94,3 +94,15 @@ RAW_RUN_ID=20260530T233446Z PANEL_RUN_ID=20260531T003936Z_panel_filing \
 srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
   --ntasks=1 --cpus-per-task=8 scripts/run_segment_set_model.sh
 ```
+
+Generate the private visual pack and model card:
+
+```bash
+RAW_RUN_ID=20260530T233446Z \
+PANEL_RUN_ID=20260531T003936Z_panel_filing \
+BASELINE_RUN_ID=20260531T004841Z_baseline_filing \
+LGBM_RUN_ID=20260531T005001Z_lgbm_filing \
+SET_RUN_ID=20260531T010832Z_set \
+srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
+  --ntasks=1 --cpus-per-task=4 scripts/run_visual_pack.sh
+```
