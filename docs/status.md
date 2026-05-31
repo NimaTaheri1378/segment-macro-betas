@@ -162,9 +162,14 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 64 unit tests.
+- Local checks passed: release audit, public safety scan, and 65 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 64 unit tests.
+  audit, public safety scan, and 65 unit tests.
+- Private manifest frontier audits `20260531T_private_state_audit` locally and
+  `20260531T_private_state_audit_remote` on allocation `5752806` passed with
+  zero failures and four explicit blockers: non-FRED revision safety, macro
+  tensor revision safety, claim-ledger blocked wording, and the FRED `429`
+  full-catalog gate.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.

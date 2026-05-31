@@ -26,6 +26,15 @@ python scripts/release_audit.py
 python -m unittest discover -s tests
 ```
 
+When private ignored run artifacts are present, audit the proposal frontier:
+
+```bash
+python scripts/private_state_audit.py --run-id <private-audit-run-id>
+```
+
+This checks the schema, WRDS extract, panel, model, macro, table, visual, and
+known blocker manifests without exposing private data.
+
 On Amarel, set the approved project root and allocation id in your shell before
 calling any runner:
 

@@ -23,6 +23,8 @@ Implemented public code:
   installed build lacks GPU support.
 - Static visual pack, HTML dashboard, and model-card generator.
 - Public safety and release audit checks.
+- Private-state manifest audit for ignored empirical artifacts and known
+  blockers.
 - GitHub CI runs public safety scan, release audit, and unit tests.
 - GitHub release checklist in `docs/github_release_checklist.md`.
 - Claim guardrails and private claim-ledger generator.

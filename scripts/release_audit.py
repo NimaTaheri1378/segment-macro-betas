@@ -27,6 +27,7 @@ REQUIRED_PUBLIC_FILES = [
     "docs/status.md",
     "scripts/_amarel_env.sh",
     "scripts/public_safety_scan.py",
+    "scripts/private_state_audit.py",
     "scripts/run_claim_ledger.sh",
     "scripts/run_factor_robustness.sh",
     "scripts/run_macro_engine.sh",

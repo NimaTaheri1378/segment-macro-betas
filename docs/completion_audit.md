@@ -22,7 +22,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and macro-aware private claim-ledger run `20260531T_claim_ledger_macro_nonfred`. |
 | Publication-style diagnostic tables are implemented | `src/segment_macro_betas/publication_tables.py`, `scripts/run_publication_tables.sh`, and macro-aware private run `20260531T_publication_tables_macro_nonfred` with zero review failures. |
 | Visual pack and model card are implemented | `src/segment_macro_betas/visual_pack.py`; macro-aware visual pack run `20260531T_visual_pack_macro_nonfred_v2`. |
-| Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; no configured remote; no push. |
+| Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; private-state audit `20260531T_private_state_audit` has zero failures; no configured remote; no push. |
 
 ## Code-Complete But Data-Gated
 
@@ -46,6 +46,7 @@ Local checks:
 ```bash
 python scripts/release_audit.py
 python scripts/public_safety_scan.py
+python scripts/private_state_audit.py --run-id 20260531T_private_state_audit
 python -m unittest discover -s tests
 git diff --check
 ```
