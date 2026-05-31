@@ -101,6 +101,13 @@ revenue and operate. If those disclosures map firms to macro states before
 returns are realized, then geography-by-segment information can become a
 structured source of macro beta variation across firms.
 
+Development-sample evidence says **yes, with discipline**: segment geography
+contains cross-sectional return information, and macro-aware variants improve
+the economic long-short spread in the full-catalog run. The result is strongest
+as a guarded research finding rather than a final trading claim, because the
+2026 holdout is frozen but still unopened and broader historical-vintage macro
+coverage remains a separate credibility check.
+
 ## Headline Private Diagnostics
 
 These are private-run development-sample diagnostics summarized for project
