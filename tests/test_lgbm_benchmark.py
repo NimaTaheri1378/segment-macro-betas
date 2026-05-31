@@ -1,7 +1,7 @@
 import pandas as pd
 import unittest
 
-from segment_macro_betas.lgbm_benchmark import build_feature_frame, make_yearly_folds, monthly_rank_ic
+from segment_macro_betas.lgbm_benchmark import build_feature_frame, make_yearly_folds, monthly_rank_ic, parse_variants, select_features
 
 
 class LgbmBenchmarkTests(unittest.TestCase):
@@ -41,6 +41,14 @@ class LgbmBenchmarkTests(unittest.TestCase):
         folds = make_yearly_folds(pd.Series(dates), min_train_months=24)
         self.assertEqual(folds[0]["fold_year"], 2021)
         self.assertLess(folds[-1]["validation_end"], pd.Timestamp("2026-01-01"))
+
+    def test_parse_and_select_variants(self) -> None:
+        variants = parse_variants("all,segment_only")
+        self.assertEqual(variants, ["all", "segment_only"])
+        selected = select_features(["foreign_share", "log_mktcap", "mktrf"], "segment_only")
+        self.assertEqual(selected, ["foreign_share"])
+        with self.assertRaises(ValueError):
+            parse_variants("unknown")
 
     def test_monthly_rank_ic_skips_tiny_months(self) -> None:
         predictions = pd.DataFrame(

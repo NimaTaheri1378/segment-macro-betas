@@ -26,3 +26,10 @@ validation year, it trains only on earlier firm-months and predicts
 next-month excess returns for that validation year. The primary metric is the
 monthly rank IC of predictions; the secondary diagnostic forms monthly
 prediction quintiles and tracks the equal-weight Q5 minus Q1 return spread.
+
+The benchmark reports feature ablations rather than a single headline model.
+The core variants compare the full feature set with versions that remove
+same-month market factors, remove both market factors and own-return fields,
+use segment features only, or use non-segment controls only. This keeps the
+diagnostics focused on whether segment disclosure features add signal beyond
+standard return, factor, and accounting controls.

@@ -7,6 +7,12 @@ training:
   secondary_metric: predicted_quintile_q5_minus_q1
   min_train_months: 36
   holdout_start: "2026-01-01"
+variants:
+  - all
+  - no_market_factors
+  - no_return_or_market
+  - segment_only
+  - non_segment_controls
 features:
   segment:
     - foreign_share

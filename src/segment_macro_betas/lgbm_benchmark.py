@@ -14,13 +14,15 @@ from segment_macro_betas.paths import SCRATCH_PROJECT_ROOT, ensure_within, make_
 
 
 TARGET = "next_month_excess_ret"
-DEFAULT_FEATURES = [
+SEGMENT_FEATURES = [
     "foreign_share",
     "domestic_share",
     "geo_hhi",
     "geo_count",
     "top_geo_share",
     "log_segment_sales",
+]
+FIRM_FEATURES = [
     "log_mktcap",
     "log_at",
     "book_to_market",
@@ -29,13 +31,25 @@ DEFAULT_FEATURES = [
     "capx_to_assets",
     "rd_to_assets",
     "leverage",
+]
+RETURN_FEATURES = [
     "ret",
     "excess_ret",
+]
+MARKET_FEATURES = [
     "mktrf",
     "smb",
     "hml",
     "umd",
 ]
+DEFAULT_FEATURES = SEGMENT_FEATURES + FIRM_FEATURES + RETURN_FEATURES + MARKET_FEATURES
+FEATURE_VARIANTS = {
+    "all": DEFAULT_FEATURES,
+    "no_market_factors": SEGMENT_FEATURES + FIRM_FEATURES + RETURN_FEATURES,
+    "no_return_or_market": SEGMENT_FEATURES + FIRM_FEATURES,
+    "segment_only": SEGMENT_FEATURES,
+    "non_segment_controls": FIRM_FEATURES + RETURN_FEATURES + MARKET_FEATURES,
+}
 
 
 def now_iso() -> str:
@@ -91,6 +105,21 @@ def build_feature_frame(panel: pd.DataFrame, *, holdout_start: str = "2026-01-01
         df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
     df = df[df[TARGET].notna()].copy()
     return df, features
+
+
+def parse_variants(raw: str | None) -> list[str]:
+    if not raw:
+        return ["all"]
+    variants = [item.strip() for item in raw.split(",") if item.strip()]
+    unknown = [variant for variant in variants if variant not in FEATURE_VARIANTS]
+    if unknown:
+        raise ValueError(f"Unknown LightGBM variant(s): {', '.join(unknown)}")
+    return variants
+
+
+def select_features(available_features: list[str], variant: str) -> list[str]:
+    requested = FEATURE_VARIANTS[variant]
+    return [feature for feature in requested if feature in available_features]
 
 
 def make_yearly_folds(dates: pd.Series, *, min_train_months: int = 36, holdout_start: str = "2026-01-01") -> list[dict[str, Any]]:
@@ -212,21 +241,22 @@ def fit_predict_lgbm(
     return predictions, importances
 
 
-def render_figures(figures_dir: Path, spread: pd.DataFrame, rank_ic: pd.DataFrame) -> dict[str, str | None]:
+def render_figures(figures_dir: Path, spread: pd.DataFrame, rank_ic: pd.DataFrame, *, variant: str) -> dict[str, str | None]:
     plt = setup_matplotlib()
-    outputs: dict[str, str | None] = {"prediction_spread": None, "rank_ic": None}
+    label = variant.replace("_", " ").title()
+    outputs: dict[str, str | None] = {"prediction_spread_figure": None, "rank_ic_figure": None}
     if len(spread):
         fig, ax = plt.subplots(figsize=(7.5, 4.2))
         ax.plot(spread["date"], spread["cum_q5_minus_q1"], color="#226F54", linewidth=2.0)
         ax.axhline(0, color="black", linewidth=0.8)
-        ax.set_title("LightGBM Predicted Q5 - Q1 Cumulative Return")
+        ax.set_title(f"LightGBM {label}: Predicted Q5 - Q1")
         ax.set_ylabel("Cumulative return")
         fig.autofmt_xdate(rotation=25)
         fig.tight_layout()
-        path = figures_dir / "lgbm_prediction_spread_cumulative.png"
+        path = figures_dir / f"lgbm_{variant}_prediction_spread_cumulative.png"
         fig.savefig(path)
         plt.close(fig)
-        outputs["prediction_spread"] = str(path)
+        outputs["prediction_spread_figure"] = str(path)
     if len(rank_ic):
         ric = rank_ic.copy()
         ric["rolling_12m"] = ric["rank_ic"].rolling(12, min_periods=3).mean()
@@ -234,43 +264,26 @@ def render_figures(figures_dir: Path, spread: pd.DataFrame, rank_ic: pd.DataFram
         ax.bar(ric["date"], ric["rank_ic"], color="#B56576", alpha=0.45, width=20)
         ax.plot(ric["date"], ric["rolling_12m"], color="#2F3E46", linewidth=2.0)
         ax.axhline(0, color="black", linewidth=0.8)
-        ax.set_title("LightGBM Monthly Rank IC")
+        ax.set_title(f"LightGBM {label}: Monthly Rank IC")
         ax.set_ylabel("Rank IC")
         fig.autofmt_xdate(rotation=25)
         fig.tight_layout()
-        path = figures_dir / "lgbm_rank_ic.png"
+        path = figures_dir / f"lgbm_{variant}_rank_ic.png"
         fig.savefig(path)
         plt.close(fig)
-        outputs["rank_ic"] = str(path)
+        outputs["rank_ic_figure"] = str(path)
     return outputs
 
 
-def run_lgbm_benchmark(
-    project_root: Path,
-    panel_run_id: str,
-    run_id: str,
+def summarize_variant(
     *,
-    n_jobs: int = 4,
-    min_train_months: int = 36,
-    max_train_rows_per_fold: int | None = None,
-) -> dict[str, Any]:
-    paths = make_run_paths(project_root, run_id)
-    panel_path = ensure_within(project_root, project_root / "data" / "interim" / panel_run_id / "monthly_panel.parquet")
-    tables_dir = ensure_within(project_root, project_root / "artifacts" / "tables" / run_id)
-    figures_dir = ensure_within(project_root, project_root / "artifacts" / "figures_static" / run_id)
-    tables_dir.mkdir(parents=True, exist_ok=True)
-    figures_dir.mkdir(parents=True, exist_ok=True)
-
-    panel = pd.read_parquet(panel_path)
-    frame, features = build_feature_frame(panel)
-    folds = make_yearly_folds(frame["date"], min_train_months=min_train_months)
-    predictions, importances = fit_predict_lgbm(
-        frame,
-        features,
-        folds,
-        n_jobs=n_jobs,
-        max_train_rows_per_fold=max_train_rows_per_fold,
-    )
+    variant: str,
+    features: list[str],
+    predictions: pd.DataFrame,
+    importances: pd.DataFrame,
+    tables_dir: Path,
+    figures_dir: Path,
+) -> tuple[dict[str, Any], dict[str, Any], pd.DataFrame]:
     rank_ic = monthly_rank_ic(predictions) if len(predictions) else pd.DataFrame()
     quintiles, spread = prediction_quintile_returns(predictions) if len(predictions) else (pd.DataFrame(), pd.DataFrame())
     if len(predictions):
@@ -296,44 +309,112 @@ def run_lgbm_benchmark(
         if len(importances)
         else pd.DataFrame()
     )
-    summary = pd.DataFrame(
-        [
-            {"metric": "feature_rows", "value": int(len(frame))},
-            {"metric": "prediction_rows", "value": int(len(predictions))},
-            {"metric": "features", "value": int(len(features))},
-            {"metric": "folds", "value": int(len(folds))},
-            {"metric": "rank_ic_months", "value": int(len(rank_ic))},
-            {"metric": "mean_rank_ic", "value": rank_ic["rank_ic"].mean() if len(rank_ic) else None},
-            {"metric": "t_rank_ic", "value": t_stat(rank_ic["rank_ic"]) if len(rank_ic) else None},
-            {"metric": "mean_q5_minus_q1", "value": spread["q5_minus_q1"].mean() if len(spread) else None},
-            {"metric": "t_q5_minus_q1", "value": t_stat(spread["q5_minus_q1"]) if len(spread) else None},
-        ]
-    )
 
-    prediction_path = tables_dir / "lgbm_predictions.parquet"
-    fold_metrics_path = tables_dir / "lgbm_fold_metrics.csv"
-    rank_ic_path = tables_dir / "lgbm_rank_ic.csv"
-    quintiles_path = tables_dir / "lgbm_prediction_quintile_returns.csv"
-    spread_path = tables_dir / "lgbm_prediction_spread.csv"
-    feature_importance_path = tables_dir / "lgbm_feature_importance.csv"
-    summary_path = tables_dir / "lgbm_summary.csv"
+    prediction_path = tables_dir / f"lgbm_{variant}_predictions.parquet"
+    fold_metrics_path = tables_dir / f"lgbm_{variant}_fold_metrics.csv"
+    rank_ic_path = tables_dir / f"lgbm_{variant}_rank_ic.csv"
+    quintiles_path = tables_dir / f"lgbm_{variant}_prediction_quintile_returns.csv"
+    spread_path = tables_dir / f"lgbm_{variant}_prediction_spread.csv"
+    feature_importance_path = tables_dir / f"lgbm_{variant}_feature_importance.csv"
     atomic_write_parquet(predictions, prediction_path)
     fold_metrics.to_csv(fold_metrics_path, index=False)
     rank_ic.to_csv(rank_ic_path, index=False)
     quintiles.to_csv(quintiles_path, index=False)
     spread.to_csv(spread_path, index=False)
     feature_importance.to_csv(feature_importance_path, index=False)
-    summary.to_csv(summary_path, index=False)
-    figure_outputs = render_figures(figures_dir, spread, rank_ic)
+    figure_outputs = render_figures(figures_dir, spread, rank_ic, variant=variant)
 
+    checks = {
+        "prediction_rows": int(len(predictions)),
+        "rank_ic_months": int(len(rank_ic)),
+        "quintile_months": int(spread["date"].nunique()) if len(spread) else 0,
+        "mean_rank_ic": float(rank_ic["rank_ic"].mean()) if len(rank_ic) else None,
+        "t_rank_ic": t_stat(rank_ic["rank_ic"]) if len(rank_ic) else None,
+        "mean_q5_minus_q1": float(spread["q5_minus_q1"].mean()) if len(spread) else None,
+        "t_q5_minus_q1": t_stat(spread["q5_minus_q1"]) if len(spread) else None,
+    }
     status = "ok" if len(predictions) and len(rank_ic) and len(features) else "needs_review"
+    outputs = {
+        "predictions": str(prediction_path),
+        "fold_metrics": str(fold_metrics_path),
+        "rank_ic": str(rank_ic_path),
+        "quintile_returns": str(quintiles_path),
+        "spread": str(spread_path),
+        "feature_importance": str(feature_importance_path),
+        **figure_outputs,
+    }
+    summary_row = {"variant": variant, "features": int(len(features)), "status": status, **checks}
+    variant_manifest = {
+        "features": features,
+        "checks": checks,
+        "outputs": outputs,
+        "status": status,
+    }
+    return variant_manifest, summary_row, feature_importance
+
+
+def run_lgbm_benchmark(
+    project_root: Path,
+    panel_run_id: str,
+    run_id: str,
+    *,
+    n_jobs: int = 4,
+    min_train_months: int = 36,
+    max_train_rows_per_fold: int | None = None,
+    variants: list[str] | None = None,
+) -> dict[str, Any]:
+    paths = make_run_paths(project_root, run_id)
+    panel_path = ensure_within(project_root, project_root / "data" / "interim" / panel_run_id / "monthly_panel.parquet")
+    tables_dir = ensure_within(project_root, project_root / "artifacts" / "tables" / run_id)
+    figures_dir = ensure_within(project_root, project_root / "artifacts" / "figures_static" / run_id)
+    tables_dir.mkdir(parents=True, exist_ok=True)
+    figures_dir.mkdir(parents=True, exist_ok=True)
+
+    panel = pd.read_parquet(panel_path)
+    frame, features = build_feature_frame(panel)
+    folds = make_yearly_folds(frame["date"], min_train_months=min_train_months)
+    variants = variants or ["all"]
+    variant_outputs: dict[str, Any] = {}
+    summary_rows: list[dict[str, Any]] = []
+    feature_importance_by_variant: dict[str, pd.DataFrame] = {}
+    for variant in variants:
+        variant_features = select_features(features, variant)
+        predictions, importances = fit_predict_lgbm(
+            frame,
+            variant_features,
+            folds,
+            n_jobs=n_jobs,
+            max_train_rows_per_fold=max_train_rows_per_fold,
+        )
+        if len(predictions):
+            predictions["variant"] = variant
+        if len(importances):
+            importances["variant"] = variant
+        variant_manifest, summary_row, feature_importance = summarize_variant(
+            variant=variant,
+            features=variant_features,
+            predictions=predictions,
+            importances=importances,
+            tables_dir=tables_dir,
+            figures_dir=figures_dir,
+        )
+        variant_outputs[variant] = variant_manifest
+        summary_rows.append(summary_row)
+        feature_importance_by_variant[variant] = feature_importance
+
+    summary = pd.DataFrame(summary_rows)
+    summary_path = tables_dir / "lgbm_summary.csv"
+    summary.to_csv(summary_path, index=False)
+
+    status = "ok" if len(summary) and (summary["status"] == "ok").all() else "needs_review"
     manifest = {
         "run_id": run_id,
         "panel_run_id": panel_run_id,
         "created_utc": now_iso(),
         "project_root": str(project_root),
         "model": "lightgbm_regressor_expanding_yearly",
-        "features": features,
+        "available_features": features,
+        "requested_variants": variants,
         "validation": {
             "scheme": "expanding_train_yearly_validation",
             "min_train_months": int(min_train_months),
@@ -348,32 +429,20 @@ def run_lgbm_benchmark(
         },
         "inputs": {"panel": str(panel_path), "panel_rows": int(len(panel)), "feature_rows": int(len(frame))},
         "checks": {
-            "prediction_rows": int(len(predictions)),
-            "rank_ic_months": int(len(rank_ic)),
-            "quintile_months": int(spread["date"].nunique()) if len(spread) else 0,
-            "mean_rank_ic": float(rank_ic["rank_ic"].mean()) if len(rank_ic) else None,
-            "t_rank_ic": t_stat(rank_ic["rank_ic"]) if len(rank_ic) else None,
-            "mean_q5_minus_q1": float(spread["q5_minus_q1"].mean()) if len(spread) else None,
-            "t_q5_minus_q1": t_stat(spread["q5_minus_q1"]) if len(spread) else None,
+            "variants_ok": int((summary["status"] == "ok").sum()) if len(summary) else 0,
+            "variants_total": int(len(summary)),
+            "best_rank_ic_variant": summary.sort_values("mean_rank_ic", ascending=False)["variant"].iloc[0] if len(summary) else None,
+            "best_spread_variant": summary.sort_values("mean_q5_minus_q1", ascending=False)["variant"].iloc[0] if len(summary) else None,
         },
-        "outputs": {
-            "predictions": str(prediction_path),
-            "fold_metrics": str(fold_metrics_path),
-            "rank_ic": str(rank_ic_path),
-            "quintile_returns": str(quintiles_path),
-            "spread": str(spread_path),
-            "feature_importance": str(feature_importance_path),
-            "summary": str(summary_path),
-            **figure_outputs,
-        },
+        "outputs": {"summary": str(summary_path), "variants": variant_outputs},
         "status": status,
     }
     atomic_write_json(paths.manifests / "lgbm_benchmark.json", manifest)
-    atomic_write_text(paths.reports / "lgbm_benchmark_report.md", report_text(manifest, summary, feature_importance))
+    atomic_write_text(paths.reports / "lgbm_benchmark_report.md", report_text(manifest, summary, feature_importance_by_variant))
     return manifest
 
 
-def report_text(manifest: dict[str, Any], summary: pd.DataFrame, feature_importance: pd.DataFrame) -> str:
+def report_text(manifest: dict[str, Any], summary: pd.DataFrame, feature_importance_by_variant: dict[str, pd.DataFrame]) -> str:
     lines = [
         "# LightGBM Benchmark Report",
         "",
@@ -381,18 +450,23 @@ def report_text(manifest: dict[str, Any], summary: pd.DataFrame, feature_importa
         f"- Panel run ID: `{manifest['panel_run_id']}`",
         f"- Status: `{manifest['status']}`",
         f"- Validation: `{manifest['validation']['scheme']}`",
+        f"- Variants: `{', '.join(manifest['requested_variants'])}`",
         "",
-        "## Summary",
+        "## Variant Summary",
         "",
-        "| Metric | Value |",
-        "|---|---:|",
+        "| Variant | Features | Rank IC | Rank IC t | Q5-Q1 | Q5-Q1 t |",
+        "|---|---:|---:|---:|---:|---:|",
     ]
     for row in summary.to_dict(orient="records"):
-        lines.append(f"| `{row['metric']}` | {row['value']} |")
-    if len(feature_importance):
-        lines.extend(["", "## Top Features", "", "| Feature | Mean importance |", "|---|---:|"])
-        for row in feature_importance.head(12).to_dict(orient="records"):
-            lines.append(f"| `{row['feature']}` | {row['mean_importance']} |")
+        lines.append(
+            f"| `{row['variant']}` | {row['features']} | {row['mean_rank_ic']} | {row['t_rank_ic']} | "
+            f"{row['mean_q5_minus_q1']} | {row['t_q5_minus_q1']} |"
+        )
+    for variant, feature_importance in feature_importance_by_variant.items():
+        if len(feature_importance):
+            lines.extend(["", f"## Top Features: `{variant}`", "", "| Feature | Mean importance |", "|---|---:|"])
+            for row in feature_importance.head(10).to_dict(orient="records"):
+                lines.append(f"| `{row['feature']}` | {row['mean_importance']} |")
     lines.append("")
     return "\n".join(lines)
 
@@ -405,6 +479,7 @@ def main() -> int:
     parser.add_argument("--n-jobs", type=int, default=4)
     parser.add_argument("--min-train-months", type=int, default=36)
     parser.add_argument("--max-train-rows-per-fold", type=int, default=None)
+    parser.add_argument("--variants", default="all")
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)
     manifest = run_lgbm_benchmark(
@@ -414,6 +489,7 @@ def main() -> int:
         n_jobs=args.n_jobs,
         min_train_months=args.min_train_months,
         max_train_rows_per_fold=args.max_train_rows_per_fold,
+        variants=parse_variants(args.variants),
     )
     print(f"status={manifest['status']}")
     print(f"manifest={project_root / 'runs' / args.run_id / 'manifests' / 'lgbm_benchmark.json'}")
