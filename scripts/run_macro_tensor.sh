@@ -6,7 +6,7 @@ source "$SCRIPT_DIR/_amarel_env.sh"
 RAW_RUN_ID="${RAW_RUN_ID:?RAW_RUN_ID required}"
 PANEL_RUN_ID="${PANEL_RUN_ID:?PANEL_RUN_ID required}"
 MACRO_RUN_ID="${MACRO_RUN_ID:?MACRO_RUN_ID required}"
-MACRO_DATASET="${MACRO_DATASET:-macro_fred_monthly}"
+MACRO_DATASET="${MACRO_DATASET:-macro_official_monthly}"
 RELEASE_LAG_DAYS="${RELEASE_LAG_DAYS:-0}"
 RUN_ID="${1:-$(date -u +%Y%m%dT%H%M%SZ)}"
 

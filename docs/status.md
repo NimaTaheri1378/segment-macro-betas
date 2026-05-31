@@ -84,9 +84,9 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 47 unit tests.
+- Local checks passed: release audit, public safety scan, and 50 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 47 unit tests.
+  audit, public safety scan, and 50 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
@@ -94,7 +94,7 @@ Latest public release-prep check:
 Latest macro-tensor code status:
 
 - Public macro-series catalog is in `configs/macro_series.yml` with configured
-  release-lag timing metadata.
+  release-lag timing metadata and FRED/BLS/BEA/EIA source adapters.
 - Public code can construct firm-month macro interaction features and
   segment-token macro tensors from cached private macro Parquet files.
 - Macro timing uses `available_date`, `realtime_start`, or `release_date` when
@@ -102,10 +102,11 @@ Latest macro-tensor code status:
   vintage-safe.
 - Global macro states are allowed as fallback states for all segment-token
   areas.
-- Macro-engine catalog dry run `20260531T_macro_catalog_dry` passed on the
-  allocation with no credentials present and no API calls executed.
-- Execute-mode missing-secret guard run `20260531T_macro_missing_secret_guard`
-  stopped before any API call with status `missing_fred_api_key`.
+- Macro-engine multi-source catalog dry run `20260531T_macro_multisource_dry`
+  passed locally with no credentials present and no API calls executed.
+- Execute-mode missing-secret guard run
+  `20260531T_macro_multisource_missing_guard` stopped before any API call with
+  status `missing_credentials`.
 - Full macro API execution is still gated on an untracked compute-host `.env`.
 
 Latest GPU modeling code status:

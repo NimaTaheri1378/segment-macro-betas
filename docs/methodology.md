@@ -61,10 +61,10 @@ manifest marks the run as not fully vintage-safe instead of silently promoting
 it to a final result.
 
 The public macro catalog assigns each official macro series to a macro area and
-configured release lag. Global macro states are allowed as a fallback for all
-segment-token areas. These configured lags are no-lookahead timing controls;
-they are not treated as evidence that the cached series is unrevised historical
-vintage data.
+configured release lag. Current adapters cover FRED, BLS, BEA, and EIA. Global
+macro states are allowed as a fallback for all segment-token areas. These
+configured lags are no-lookahead timing controls; they are not treated as
+evidence that the cached series is unrevised historical vintage data.
 
 The visual pack is generated from private manifests and ignored artifacts. It
 collects sample coverage, filing-date activation coverage, exposure

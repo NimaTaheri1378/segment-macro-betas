@@ -25,8 +25,9 @@ SMB_SLURM_JOB_ID=<approved-allocation-id>
 
 For macro execution, copy `.env.example` to an untracked `.env` on the compute
 host and fill only the variables needed for the run. The macro engine reads the
-public catalog in `configs/macro_series.yml`, writes timing flags and row counts
-to manifests, and never writes credential values to manifests or reports.
+public FRED/BLS/BEA/EIA catalog in `configs/macro_series.yml`, writes timing
+flags and row counts to manifests, and never writes credential values to
+manifests or reports.
 
 Compute work should run only through the user-approved Slurm allocation unless
 the user explicitly changes the allocation.

@@ -10,8 +10,8 @@ Implemented public code:
 - Restartable sharded WRDS extraction.
 - Filing-date activation supplement and point-in-time monthly panel builder.
 - Baseline portfolio and cross-sectional diagnostics.
-- Public macro-series catalog plus cached macro tensor construction with
-  timing flags.
+- Public FRED/BLS/BEA/EIA macro-series catalog plus cached macro tensor
+  construction with timing flags.
 - Expanding-window LightGBM benchmark with feature ablations.
 - Deep Sets segment-set benchmark plus optional Set Transformer variant.
 - Cached factor-alpha and turnover robustness diagnostics.

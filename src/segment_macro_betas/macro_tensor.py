@@ -344,7 +344,7 @@ def main() -> int:
     parser.add_argument("--raw-run-id", required=True)
     parser.add_argument("--panel-run-id", required=True)
     parser.add_argument("--macro-run-id", required=True)
-    parser.add_argument("--macro-dataset", default="macro_fred_monthly")
+    parser.add_argument("--macro-dataset", default="macro_official_monthly")
     parser.add_argument("--release-lag-days", type=int, default=0)
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)

@@ -39,3 +39,30 @@ series:
     release_lag_days: 3
     timing: configured_release_lag
     revision_safe: false
+  - source: bls
+    series_id: LNS14000000
+    series_name: bls_unemployment_rate
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 7
+    timing: configured_release_lag
+    revision_safe: false
+  - source: bea
+    series_id: NIPA_T10101_L1_Q
+    series_name: bea_gdp_growth
+    macro_area: GLOBAL
+    frequency: Q
+    dataset: NIPA
+    table_name: T10101
+    line_number: 1
+    release_lag_days: 30
+    timing: configured_release_lag
+    revision_safe: false
+  - source: eia
+    series_id: PET.RWTC.M
+    series_name: wti_crude_oil_price
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 3
+    timing: configured_release_lag
+    revision_safe: false
