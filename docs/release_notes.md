@@ -12,6 +12,8 @@ Implemented public code:
 - Baseline portfolio and cross-sectional diagnostics.
 - Public FRED/BLS/BEA/EIA macro-series catalog plus cached macro tensor
   construction with timing flags.
+- FRED realtime and initial-release catalog support for revision-safe macro
+  experiments once API rate limits permit execution.
 - Expanding-window LightGBM benchmark with feature ablations and optional
   macro-aware panel datasets.
 - Deep Sets segment-set benchmark plus full CUDA Set Transformer diagnostic.

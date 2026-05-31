@@ -70,6 +70,14 @@ macro states are allowed as a fallback for all segment-token areas. These
 configured lags are no-lookahead timing controls; they are not treated as
 evidence that the cached series is unrevised historical vintage data.
 
+For FRED-only vintage runs, the macro engine supports real-time observation
+requests. `fred_initial_release` requests initial-release observations, while
+`fred_vintage_all` and `fred_vintage_changes` request broader vintage panels.
+Those rows use the FRED `realtime_start` field as their availability date, so
+the macro tensor can join the latest macro value actually known by each
+firm-month. The code path is implemented, but execution remains gated by FRED
+rate limits and private API credentials.
+
 The visual pack is generated from private manifests and ignored artifacts. It
 collects sample coverage, filing-date activation coverage, exposure
 distributions, sector-geography exposure, model-comparison metrics, a firm

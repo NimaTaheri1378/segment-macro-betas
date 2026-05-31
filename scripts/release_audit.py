@@ -17,6 +17,7 @@ REQUIRED_PUBLIC_FILES = [
     "pyproject.toml",
     "configs/data.yml",
     "configs/macro_series.yml",
+    "configs/macro_series_fred_initial_release.example.yml",
     "configs/schema_map.yml",
     "docs/claim_guardrails.md",
     "docs/completion_audit.md",

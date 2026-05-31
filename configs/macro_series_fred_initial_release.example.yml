@@ -1,0 +1,23 @@
+series:
+  - source: fred
+    series_id: UNRATE
+    series_name: us_unemployment_initial_release
+    macro_area: GLOBAL
+    frequency: monthly
+    timing: fred_initial_release
+    fred_output_type: 4
+    realtime_start: "1776-07-04"
+    realtime_end: "9999-12-31"
+    release_lag_days: 0
+    revision_safe: true
+  - source: fred
+    series_id: CPIAUCSL
+    series_name: us_cpi_initial_release
+    macro_area: GLOBAL
+    frequency: monthly
+    timing: fred_initial_release
+    fred_output_type: 4
+    realtime_start: "1776-07-04"
+    realtime_end: "9999-12-31"
+    release_lag_days: 0
+    revision_safe: true

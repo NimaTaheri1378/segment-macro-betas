@@ -162,9 +162,9 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 65 unit tests.
+- Local checks passed: release audit, public safety scan, and 67 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 65 unit tests.
+  audit, public safety scan, and 67 unit tests.
 - Private manifest frontier audits `20260531T_private_state_audit` locally and
   `20260531T_private_state_audit_remote` on allocation `5752806` passed with
   zero failures and four explicit blockers: non-FRED revision safety, macro
@@ -193,6 +193,11 @@ Latest macro-tensor code status:
 - Official non-FRED macro execution completed in
   `20260531T_macro_nonfred_full`; the full FRED-inclusive catalog is blocked
   by HTTP `429` rate limiting and should not be retried aggressively.
+- FRED initial-release/realtime support is implemented through
+  `timing: fred_initial_release`, `fred_vintage_all`, and
+  `fred_vintage_changes`. Dry run `20260531T_fred_initial_release_dry`
+  locally and `20260531T_fred_initial_release_dry_remote` on allocation
+  `5752806` verified the example catalog without making a network call.
 
 Latest GPU modeling code status:
 

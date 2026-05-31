@@ -39,6 +39,14 @@ BEA, and EIA. Live output includes `available_date`, `timing_source`,
 prevent lookahead, while `revision_safe=false` means the cache is not a
 historical unrevised-vintage archive.
 
+For FRED series, catalog rows can request real-time output by using
+`timing: fred_initial_release`, `fred_vintage_all`, or
+`fred_vintage_changes`. These modes pass FRED real-time parameters to
+`fred/series/observations`, use `realtime_start` as `available_date`, and mark
+the resulting rows as revision-safe. The example catalog
+`configs/macro_series_fred_initial_release.example.yml` is intentionally not
+the default because live FRED execution must respect API rate limits.
+
 The factor robustness runner reads cached model prediction Parquet files under
 `artifacts/tables/<model_run_id>/` and benchmark factor columns from the
 private monthly panel. It writes gross and net long-short spreads, turnover

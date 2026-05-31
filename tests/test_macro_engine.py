@@ -6,9 +6,11 @@ import pandas as pd
 
 from segment_macro_betas.macro_engine import (
     add_configured_availability,
+    fred_query_params,
     load_series_catalog,
     macro_fetch_error,
     missing_credentials,
+    normalise_series_config,
     parse_period_to_date,
     read_env_file,
     standard_macro_frame,
@@ -40,6 +42,14 @@ class MacroEngineTests(unittest.TestCase):
         self.assertTrue(bool(out.loc[0, "lookahead_safe"]))
         self.assertFalse(bool(out.loc[0, "revision_safe"]))
 
+    def test_fred_realtime_availability_uses_realtime_start(self) -> None:
+        df = pd.DataFrame({"date": ["2020-01-01"], "value": [1.0], "realtime_start": ["2020-02-07"]})
+        series = {"release_lag_days": 99, "timing": "fred_initial_release", "revision_safe": True}
+        out = add_configured_availability(df, series)
+        self.assertEqual(str(out.loc[0, "available_date"].date()), "2020-02-07")
+        self.assertEqual(out.loc[0, "timing_source"], "fred_initial_release")
+        self.assertTrue(bool(out.loc[0, "revision_safe"]))
+
     def test_period_parsing_handles_month_quarter_and_year(self) -> None:
         self.assertEqual(str(parse_period_to_date("M02", year="2020").date()), "2020-02-29")
         self.assertEqual(str(parse_period_to_date("2020Q2").date()), "2020-06-30")
@@ -61,6 +71,20 @@ class MacroEngineTests(unittest.TestCase):
         self.assertIn("available_date", out.columns)
         self.assertIn("realtime_start", out.columns)
         self.assertAlmostEqual(float(out.loc[0, "value"]), 1.25)
+
+    def test_fred_realtime_config_defaults_to_revision_safe(self) -> None:
+        series = normalise_series_config(
+            {
+                "source": "fred",
+                "series_id": "UNRATE",
+                "timing": "fred_initial_release",
+            }
+        )
+        self.assertTrue(series["revision_safe"])
+        params = fred_query_params(series, "key", "2020-01-01", "2020-12-31")
+        self.assertEqual(params["output_type"], 4)
+        self.assertEqual(params["realtime_start"], "1776-07-04")
+        self.assertEqual(params["realtime_end"], "9999-12-31")
 
     def test_missing_credentials_is_source_specific(self) -> None:
         catalog = [

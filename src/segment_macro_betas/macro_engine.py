@@ -87,6 +87,13 @@ SOURCE_API_KEYS = {
     "bea": "BEA_API_KEY",
     "eia": "EIA_API_KEY",
 }
+FRED_FIRST_REALTIME_DATE = "1776-07-04"
+FRED_LAST_REALTIME_DATE = "9999-12-31"
+FRED_REALTIME_TIMINGS = {
+    "fred_initial_release": 4,
+    "fred_vintage_all": 2,
+    "fred_vintage_changes": 3,
+}
 
 
 def now_iso() -> str:
@@ -114,6 +121,8 @@ def normalise_series_config(raw: dict[str, Any]) -> dict[str, Any]:
     if source not in SUPPORTED_SOURCES:
         raise ValueError(f"Unsupported macro source {source!r} for {series_id}.")
     release_lag_days = int(raw.get("release_lag_days", 0))
+    timing = str(raw.get("timing", "configured_release_lag")).strip().lower()
+    revision_safe_default = source == "fred" and timing in FRED_REALTIME_TIMINGS
     out = {
         "source": source,
         "series_id": series_id,
@@ -121,10 +130,10 @@ def normalise_series_config(raw: dict[str, Any]) -> dict[str, Any]:
         "macro_area": str(raw.get("macro_area", "GLOBAL")).strip().upper(),
         "release_lag_days": release_lag_days,
         "frequency": str(raw.get("frequency", "monthly")).strip().lower(),
-        "timing": str(raw.get("timing", "configured_release_lag")).strip().lower(),
-        "revision_safe": bool(raw.get("revision_safe", False)),
+        "timing": timing,
+        "revision_safe": bool(raw.get("revision_safe", revision_safe_default)),
     }
-    for key in ("dataset", "table_name", "line_number", "route", "data_column"):
+    for key in ("dataset", "table_name", "line_number", "route", "data_column", "realtime_start", "realtime_end", "vintage_dates", "fred_output_type"):
         if key in raw:
             out[key] = raw[key]
     return out
@@ -146,13 +155,38 @@ def load_series_catalog(project_root: Path, config_path: Path | None = None) -> 
 
 def add_configured_availability(df: pd.DataFrame, series: dict[str, Any]) -> pd.DataFrame:
     out = df.copy()
-    observation_date = pd.to_datetime(out["date"], errors="coerce") + pd.offsets.MonthEnd(0)
-    lag = pd.to_timedelta(int(series.get("release_lag_days", 0)), unit="D")
-    out["available_date"] = observation_date + lag
-    out["timing_source"] = series.get("timing", "configured_release_lag")
-    out["revision_safe"] = bool(series.get("revision_safe", False))
+    timing = str(series.get("timing", "configured_release_lag")).lower()
+    realtime_start = pd.to_datetime(out.get("realtime_start"), errors="coerce") if "realtime_start" in out.columns else pd.Series(pd.NaT, index=out.index)
+    if timing in FRED_REALTIME_TIMINGS and realtime_start.notna().any():
+        out["available_date"] = realtime_start
+        out["timing_source"] = timing
+        out["revision_safe"] = True
+    else:
+        observation_date = pd.to_datetime(out["date"], errors="coerce") + pd.offsets.MonthEnd(0)
+        lag = pd.to_timedelta(int(series.get("release_lag_days", 0)), unit="D")
+        out["available_date"] = observation_date + lag
+        out["timing_source"] = timing
+        out["revision_safe"] = bool(series.get("revision_safe", False))
     out["lookahead_safe"] = True
     return out
+
+
+def fred_query_params(series: dict[str, Any], api_key: str, start: str, end: str) -> dict[str, Any]:
+    params: dict[str, Any] = {
+        "series_id": series["series_id"],
+        "api_key": api_key,
+        "file_type": "json",
+        "observation_start": start,
+        "observation_end": end,
+    }
+    timing = str(series.get("timing", "")).lower()
+    if timing in FRED_REALTIME_TIMINGS:
+        params["realtime_start"] = series.get("realtime_start", FRED_FIRST_REALTIME_DATE)
+        params["realtime_end"] = series.get("realtime_end", FRED_LAST_REALTIME_DATE)
+        params["output_type"] = int(series.get("fred_output_type", FRED_REALTIME_TIMINGS[timing]))
+    if series.get("vintage_dates"):
+        params["vintage_dates"] = str(series["vintage_dates"])
+    return params
 
 
 def standard_macro_frame(df: pd.DataFrame, series: dict[str, Any]) -> pd.DataFrame:
@@ -214,16 +248,7 @@ def parse_period_to_date(period: str, *, year: str | int | None = None, frequenc
 
 
 def fred_observations(series: dict[str, Any], api_key: str, start: str, end: str) -> pd.DataFrame:
-    series_id = series["series_id"]
-    query = urlencode(
-        {
-            "series_id": series_id,
-            "api_key": api_key,
-            "file_type": "json",
-            "observation_start": start,
-            "observation_end": end,
-        }
-    )
+    query = urlencode(fred_query_params(series, api_key, start, end))
     url = f"https://api.stlouisfed.org/fred/series/observations?{query}"
     with urlopen(url, timeout=60) as response:
         payload = json.loads(response.read().decode("utf-8"))

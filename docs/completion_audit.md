@@ -29,7 +29,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Requirement | Current State | Gate |
 |---|---|---|
 | Full FRED-inclusive macro catalog | Execute mode started the full catalog in `20260531T_macro_full_catalog_guarded_smoke`, completed two FRED series, and then stopped safely on HTTP `429` for `UNRATE`. | Wait before retrying; do not spam the FRED API. |
-| Fully revision-safe macro interactions | The non-FRED macro tensor uses configured availability dates and is no-lookahead, but the source manifest is `revision_safe=false`. | Requires true realtime/vintage macro sources before final revision-safe claims. |
+| Fully revision-safe macro interactions | FRED realtime/initial-release catalog support is implemented and dry-run verified in `20260531T_fred_initial_release_dry`; the current non-FRED macro tensor is no-lookahead but `revision_safe=false`. | Requires executing a true realtime/vintage macro source after FRED rate-limit cooldown before final revision-safe claims. |
 
 ## Not Yet Final-Claim Ready
 
