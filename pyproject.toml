@@ -23,4 +23,5 @@ dev = [
 model = [
   "lightgbm",
   "scikit-learn",
+  "torch",
 ]

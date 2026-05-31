@@ -11,7 +11,7 @@ stages:
   - visual_pack
   - public_safe_release
 
-current_gate: segment_set_model_extension
+current_gate: visual_pack
 do_not_enter_full_scale_until:
   - schema_map_reviewed
   - smoke_panel_manifest_clean

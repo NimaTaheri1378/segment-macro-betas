@@ -35,3 +35,10 @@ same-month market factors, remove both market factors and own-return fields,
 use segment features only, or use non-segment controls only. This keeps the
 diagnostics focused on whether segment disclosure features add signal beyond
 standard return, factor, and accounting controls.
+
+The segment-set extension keeps each disclosed geography as a token rather
+than collapsing the snapshot immediately to summary statistics. The current
+benchmark uses a Deep Sets encoder with geography-token embeddings and
+revenue-share weights. It reports a `set_only` variant and a
+`set_plus_controls` variant under the same expanding yearly validation design
+as the tabular benchmarks.

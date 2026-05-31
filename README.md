@@ -86,3 +86,11 @@ By default this runner executes feature ablations: `all`,
 `no_market_factors`, `no_return_or_market`, `segment_only`, and
 `non_segment_controls`. Override with `VARIANTS=segment_only` for a targeted
 run.
+
+Run the Deep Sets segment-set extension:
+
+```bash
+RAW_RUN_ID=20260530T233446Z PANEL_RUN_ID=20260531T003936Z_panel_filing \
+srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
+  --ntasks=1 --cpus-per-task=8 scripts/run_segment_set_model.sh
+```

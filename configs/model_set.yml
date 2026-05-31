@@ -1,10 +1,21 @@
 model: segment_set_encoder
-status: scaffold
+status: executable_deep_sets_benchmark
 input_unit: firm_month_segment_set
 segment_token_fields:
   - geo_id
   - revenue_share
-  - macro_state
-  - macro_change
 baseline: deep_sets
-stretch: set_transformer
+variants:
+  - set_only
+  - set_plus_controls
+training:
+  validation: expanding_train_yearly_validation
+  primary_metric: monthly_rank_ic
+  secondary_metric: predicted_quintile_q5_minus_q1
+  holdout_start: "2026-01-01"
+  default_epochs: 3
+  default_max_segments: 12
+  default_max_vocab: 512
+stretch:
+  - set_transformer
+  - segment_macro_tokens_with_vintages
