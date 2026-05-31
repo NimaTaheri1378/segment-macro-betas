@@ -10,6 +10,11 @@ Public release gate:
   id.
 - Public tests use synthetic fixtures or code-level checks only.
 - GitHub CI runs the public safety scan, release audit, and unit tests.
+- The release audit requires the full script stack, model modules, visual-pack
+  code, output inventory, and public documentation to be present.
+- WRDS-derived outputs such as CSV tables, HTML dashboards, PNG figures,
+  Parquet panels, database files, model pickles, and archives must not be
+  tracked.
 - `docs/completion_audit.md` records verified, data-gated, and not-yet-final
   requirements before any push.
 - No GitHub remote is required for this preparation step, and nothing should be
@@ -24,5 +29,6 @@ python -m unittest discover -s tests
 ```
 
 The release audit is intentionally conservative. It fails if private data
-folders are tracked, required release files are missing, private operational
-paths appear in public text files, or core ignore rules are absent.
+folders are tracked, required release files are missing, data-like output files
+are tracked, private operational paths appear in public text files, or core
+ignore rules are absent.

@@ -33,6 +33,9 @@ Implemented public code:
   model while keeping 2026 unopened.
 - GitHub CI runs public safety scan, release audit, and unit tests.
 - GitHub release checklist in `docs/github_release_checklist.md`.
+- Public-safe output inventory in `docs/output_inventory.md`; it records which
+  private figure, dashboard, table, claim-ledger, and holdout artifacts were
+  verified without tracking the artifacts themselves.
 - Claim guardrails and private claim-ledger generator.
 - Requirement-by-requirement completion audit in `docs/completion_audit.md`.
 

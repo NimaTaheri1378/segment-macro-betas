@@ -14,6 +14,9 @@ Current implementation status:
   baselines, and an expanding-window LightGBM benchmark are implemented.
 - Official FRED/BLS/BEA/EIA macro extraction, macro tensor construction, and
   macro-aware LightGBM diagnostics are implemented for private runs.
+- Static visual-pack, dashboard, model-card, and publication-table generation
+  scripts are implemented; the rendered WRDS-derived outputs are inventoried in
+  `docs/output_inventory.md` and intentionally ignored.
 - Public repository files are code, configs, docs, and tests only.
 - Private data, credentials, and run logs are intentionally excluded from
   version control.
