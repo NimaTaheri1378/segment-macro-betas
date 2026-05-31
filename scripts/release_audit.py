@@ -16,6 +16,7 @@ REQUIRED_PUBLIC_FILES = [
     "README.md",
     "pyproject.toml",
     "configs/data.yml",
+    "configs/macro_series.yml",
     "configs/schema_map.yml",
     "docs/completion_audit.md",
     "docs/release_audit.md",
@@ -25,6 +26,7 @@ REQUIRED_PUBLIC_FILES = [
     "scripts/_amarel_env.sh",
     "scripts/public_safety_scan.py",
     "scripts/run_factor_robustness.sh",
+    "scripts/run_macro_engine.sh",
     "scripts/run_macro_tensor.sh",
 ]
 PRIVATE_TRACKED_PREFIXES = (

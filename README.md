@@ -59,6 +59,10 @@ EXECUTE=0 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT"
   --ntasks=1 --cpus-per-task=1 bash scripts/run_macro_engine.sh
 ```
 
+The macro catalog lives in `configs/macro_series.yml`. Live execution requires
+an untracked compute-host `.env`; manifests record credential presence and
+timing flags, never credential values.
+
 Build the firm-geography-macro tensor from cached macro data:
 
 ```bash

@@ -24,8 +24,8 @@ release checks are treated as evidence only for the scope they actually cover.
 
 | Requirement | Current State | Gate |
 |---|---|---|
-| Official macro API execution | `src/segment_macro_betas/macro_engine.py` can read untracked `.env` and execute FRED pulls; dry run `20260531T_release_macro_dry` passed. | Requires untracked compute-host secrets and explicit execute run. |
-| Firm-geography-macro tensor | `src/segment_macro_betas/macro_tensor.py` and `scripts/run_macro_tensor.sh` build tensors from cached macro Parquet files. | Requires a private macro run with release or realtime availability dates. |
+| Official macro API execution | `src/segment_macro_betas/macro_engine.py` can read untracked `.env`, load `configs/macro_series.yml`, and execute FRED pulls; dry run `20260531T_macro_catalog_dry` passed, and execute mode fails closed without `FRED_API_KEY`. | Requires untracked compute-host secrets and explicit execute run. |
+| Firm-geography-macro tensor | `src/segment_macro_betas/macro_tensor.py` and `scripts/run_macro_tensor.sh` build tensors from cached macro Parquet files, including global macro-state fallback for all segment-token areas. | Requires a private macro run with release or realtime availability dates. |
 | Fully vintage-safe macro interactions | Tensor builder honors `available_date`, `realtime_start`, or `release_date` and flags fallback timing. | Requires cached macro data with vintage/release timing fields. |
 
 ## Not Yet Final-Claim Ready

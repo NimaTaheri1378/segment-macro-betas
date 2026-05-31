@@ -30,6 +30,13 @@ Optional timing columns `available_date`, `realtime_start`, or `release_date`
 are used for as-of joins; if none are present, the manifest records an
 observation-date fallback and `vintage_safe=false`.
 
+The macro engine uses `configs/macro_series.yml` as the public series catalog.
+Each row declares the source, series id, public series name, macro area, and a
+configured release lag. Live FRED output includes `available_date`,
+`timing_source`, `lookahead_safe`, and `revision_safe`; configured release lags
+are intended to prevent lookahead, while `revision_safe=false` means the cache
+is not a historical unrevised-vintage archive.
+
 The factor robustness runner reads cached model prediction Parquet files under
 `artifacts/tables/<model_run_id>/` and benchmark factor columns from the
 private monthly panel. It writes gross and net long-short spreads, turnover

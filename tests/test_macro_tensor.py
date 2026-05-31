@@ -12,6 +12,7 @@ from segment_macro_betas.macro_tensor import (
 
 class MacroTensorTests(unittest.TestCase):
     def test_canonical_macro_area_maps_common_labels(self) -> None:
+        self.assertEqual(canonical_macro_area("global"), "GLOBAL")
         self.assertEqual(canonical_macro_area("United States"), "USA")
         self.assertEqual(canonical_macro_area("CHIN"), "CHINA")
         self.assertEqual(canonical_macro_area("Europe"), "EUROPE")
@@ -90,6 +91,44 @@ class MacroTensorTests(unittest.TestCase):
         self.assertAlmostEqual(float(second["segment_macro_eu_ip"]), 4.0)
         self.assertEqual(len(tokens), 4)
         self.assertEqual(checks["aggregation"]["firm_month_rows"], 2)
+        self.assertTrue(checks["macro"]["vintage_safe"])
+
+    def test_global_macro_area_applies_to_all_segment_tokens(self) -> None:
+        panel = pd.DataFrame(
+            {
+                "gvkey": ["001", "001"],
+                "permno": [10, 10],
+                "date": ["2020-03-31", "2020-04-30"],
+                "segment_srcdate": ["2019-12-31", "2019-12-31"],
+            }
+        )
+        segments = pd.DataFrame(
+            {
+                "gvkey": ["001", "001"],
+                "srcdate": ["2019-12-31", "2019-12-31"],
+                "datadate": ["2019-12-31", "2019-12-31"],
+                "gareag": ["United States", "Europe"],
+                "gareat": ["", ""],
+                "sales": [60.0, 40.0],
+                "revts": [None, None],
+                "ias": [None, None],
+                "sid": ["A", "B"],
+            }
+        )
+        macro = pd.DataFrame(
+            {
+                "series_id": ["FEDFUNDS"],
+                "series_name": ["federal_funds_rate"],
+                "macro_area": ["GLOBAL"],
+                "date": ["2020-01-31"],
+                "available_date": ["2020-02-07"],
+                "value": [1.5],
+            }
+        )
+        tensor, tokens, checks = build_macro_tensor(panel, segments, macro)
+        self.assertEqual(len(tokens), 4)
+        self.assertEqual(float(tokens["macro_federal_funds_rate"].notna().mean()), 1.0)
+        self.assertAlmostEqual(float(tensor.loc[0, "segment_macro_federal_funds_rate"]), 1.5)
         self.assertTrue(checks["macro"]["vintage_safe"])
 
 

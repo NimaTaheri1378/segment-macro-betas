@@ -22,6 +22,8 @@ DEFAULT_SERIES_AREA = {
     "DTWEXBGS": "USD",
 }
 AREA_RULES = [
+    ("GLOBAL", ("GLOBAL", "WORLD", "ALL", "ALL_AREAS")),
+    ("USD", ("USD", "DOLLAR", "TRADE WEIGHTED")),
     ("USA", ("USA", "UNITED STATES", "U.S.", "US", "N_AMER", "NORTH AMERICA")),
     ("CANADA", ("CAN", "CANADA")),
     ("CHINA", ("CHINA", "CHIN", "PRC")),
@@ -139,6 +141,9 @@ def prepare_macro_states(macro: pd.DataFrame, *, release_lag_days: int = 0) -> t
         "availability_source": source,
         "vintage_safe": bool(vintage_safe),
         "release_lag_days": int(release_lag_days),
+        "lookahead_safe": bool(df["lookahead_safe"].all()) if "lookahead_safe" in df.columns and len(df) else bool(vintage_safe),
+        "revision_safe": bool(df["revision_safe"].all()) if "revision_safe" in df.columns and len(df) else None,
+        "timing_sources": sorted(df["timing_source"].dropna().astype(str).unique().tolist()) if "timing_source" in df.columns else [source],
     }
     return df, checks
 
@@ -158,8 +163,11 @@ def attach_macro_to_tokens(tokens: pd.DataFrame, macro_states: pd.DataFrame) -> 
         feature_cols.extend([value_col, delta_1m_col, delta_12m_col])
         joined_frames = []
         state_groups = {area: group.sort_values("available_date") for area, group in states.groupby("macro_area", sort=False)}
+        global_state_group = state_groups.get("GLOBAL")
         for area, token_group in out.groupby("macro_area", sort=False):
             state_group = state_groups.get(area)
+            if (state_group is None or state_group.empty) and global_state_group is not None:
+                state_group = global_state_group
             if state_group is None or state_group.empty:
                 chunk = token_group[["_token_row_id"]].copy()
                 chunk[value_col] = np.nan

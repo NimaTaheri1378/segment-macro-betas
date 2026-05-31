@@ -87,12 +87,20 @@ Latest public release-prep check:
 
 Latest macro-tensor code status:
 
+- Public macro-series catalog is in `configs/macro_series.yml` with configured
+  release-lag timing metadata.
 - Public code can construct firm-month macro interaction features and
   segment-token macro tensors from cached private macro Parquet files.
 - Macro timing uses `available_date`, `realtime_start`, or `release_date` when
   present; observation-date fallback is explicitly flagged as not fully
   vintage-safe.
-- Full macro API execution is still gated on untracked compute-host secrets.
+- Global macro states are allowed as fallback states for all segment-token
+  areas.
+- Macro-engine catalog dry run `20260531T_macro_catalog_dry` passed on the
+  allocation with no credentials present and no API calls executed.
+- Execute-mode missing-secret guard run `20260531T_macro_missing_secret_guard`
+  stopped before any API call with status `missing_fred_api_key`.
+- Full macro API execution is still gated on an untracked compute-host `.env`.
 
 Latest GPU modeling code status:
 

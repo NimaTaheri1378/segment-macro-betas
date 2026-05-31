@@ -1,0 +1,41 @@
+series:
+  - source: fred
+    series_id: FEDFUNDS
+    series_name: federal_funds_rate
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 7
+    timing: configured_release_lag
+    revision_safe: false
+  - source: fred
+    series_id: CPIAUCSL
+    series_name: us_cpi
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 21
+    timing: configured_release_lag
+    revision_safe: false
+  - source: fred
+    series_id: UNRATE
+    series_name: us_unemployment
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 7
+    timing: configured_release_lag
+    revision_safe: false
+  - source: fred
+    series_id: INDPRO
+    series_name: us_industrial_production
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 21
+    timing: configured_release_lag
+    revision_safe: false
+  - source: fred
+    series_id: DTWEXBGS
+    series_name: trade_weighted_usd
+    macro_area: GLOBAL
+    frequency: monthly
+    release_lag_days: 3
+    timing: configured_release_lag
+    revision_safe: false
