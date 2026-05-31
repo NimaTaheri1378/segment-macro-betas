@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520" role="img" aria-labelledby="title desc">
+  <title id="title">Segment Macro Betas pipeline architecture</title>
+  <desc id="desc">Public-safe schematic showing how segment disclosures, CRSP returns, and macro series feed a point-in-time modeling and validation pipeline.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="5.5" orient="auto">
+      <path d="M0,0 L11,5.5 L0,11 Z" fill="#24324b"/>
+    </marker>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#1f2937" flood-opacity="0.16"/>
+    </filter>
+    <style>
+      .bg { fill: #f7f8fb; }
+      .title { fill: #172033; font: 700 28px Arial, sans-serif; }
+      .subtitle { fill: #536174; font: 400 15px Arial, sans-serif; }
+      .box { rx: 12; filter: url(#softShadow); }
+      .label { fill: #172033; font: 700 15px Arial, sans-serif; }
+      .small { fill: #46556b; font: 400 12px Arial, sans-serif; }
+      .arrow { stroke: #24324b; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+      .lane { fill: none; stroke: #d8deea; stroke-width: 1.5; stroke-dasharray: 7 7; }
+    </style>
+  </defs>
+  <rect class="bg" width="1180" height="520"/>
+  <text x="50" y="48" class="title">Segment Macro Betas: Point-in-Time Research Pipeline</text>
+  <text x="50" y="76" class="subtitle">Code, contracts, tests, and public-safe schematics are tracked. WRDS-derived panels, logs, tables, figures, and dashboards stay private.</text>
+
+  <rect x="34" y="104" width="1112" height="112" class="lane"/>
+  <rect x="34" y="238" width="1112" height="112" class="lane"/>
+  <rect x="34" y="372" width="1112" height="92" class="lane"/>
+  <text x="50" y="124" class="small">Inputs</text>
+  <text x="50" y="258" class="small">Point-in-time construction</text>
+  <text x="50" y="392" class="small">Models, validation, and release controls</text>
+
+  <rect x="70" y="145" width="190" height="54" class="box" fill="#c9e9e4"/>
+  <text x="92" y="169" class="label">Compustat Segments</text>
+  <text x="92" y="188" class="small">geographic revenue tokens</text>
+
+  <rect x="70" y="279" width="190" height="54" class="box" fill="#fde6bd"/>
+  <text x="104" y="303" class="label">CRSP Returns</text>
+  <text x="104" y="322" class="small">monthly forward labels</text>
+
+  <rect x="70" y="405" width="190" height="54" class="box" fill="#d9d7f7"/>
+  <text x="101" y="429" class="label">Macro Catalog</text>
+  <text x="101" y="448" class="small">FRED / BLS / BEA / EIA</text>
+
+  <rect x="330" y="145" width="190" height="54" class="box" fill="#b7ddf4"/>
+  <text x="356" y="169" class="label">Segment Activation</text>
+  <text x="356" y="188" class="small">filing-date availability</text>
+
+  <rect x="330" y="279" width="190" height="54" class="box" fill="#f6c8c6"/>
+  <text x="364" y="303" class="label">CCM Firm Panel</text>
+  <text x="364" y="322" class="small">gvkey-permno-month</text>
+
+  <rect x="330" y="405" width="190" height="54" class="box" fill="#d5ecb4"/>
+  <text x="353" y="429" class="label">Macro Availability</text>
+  <text x="353" y="448" class="small">release and vintage timing</text>
+
+  <rect x="590" y="230" width="210" height="90" class="box" fill="#fff1a8"/>
+  <text x="622" y="262" class="label">Segment x Macro Tensor</text>
+  <text x="622" y="283" class="small">firm-month exposures</text>
+  <text x="622" y="302" class="small">geography-aware macro states</text>
+
+  <rect x="870" y="132" width="210" height="54" class="box" fill="#d2eadf"/>
+  <text x="906" y="156" class="label">LightGBM Ablations</text>
+  <text x="906" y="175" class="small">rank IC and decile spreads</text>
+
+  <rect x="870" y="218" width="210" height="54" class="box" fill="#e6dcfb"/>
+  <text x="901" y="242" class="label">Deep Sets Models</text>
+  <text x="901" y="261" class="small">set and attention encoders</text>
+
+  <rect x="870" y="304" width="210" height="54" class="box" fill="#f7d6bb"/>
+  <text x="905" y="328" class="label">Factor Robustness</text>
+  <text x="905" y="347" class="small">alpha and turnover costs</text>
+
+  <rect x="870" y="390" width="210" height="54" class="box" fill="#cfe3ff"/>
+  <text x="902" y="414" class="label">Release Guardrails</text>
+  <text x="902" y="433" class="small">claims, visuals, holdout freeze</text>
+
+  <path class="arrow" d="M260 172 H320"/>
+  <path class="arrow" d="M260 306 H320"/>
+  <path class="arrow" d="M260 432 H320"/>
+  <path class="arrow" d="M520 172 C560 172 552 240 590 253"/>
+  <path class="arrow" d="M520 306 H590"/>
+  <path class="arrow" d="M520 432 C560 432 552 310 590 295"/>
+  <path class="arrow" d="M800 255 C832 245 832 165 870 159"/>
+  <path class="arrow" d="M800 270 H870"/>
+  <path class="arrow" d="M800 286 C832 296 832 325 870 331"/>
+  <path class="arrow" d="M800 304 C840 322 828 406 870 417"/>
+</svg>

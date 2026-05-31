@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="500" viewBox="0 0 1180 500" role="img" aria-labelledby="title desc">
+  <title id="title">Public-safe private diagnostic snapshot</title>
+  <desc id="desc">Aggregate development-sample diagnostics for the Segment Macro Betas private pipeline.</desc>
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#111827" flood-opacity="0.13"/>
+    </filter>
+    <style>
+      .bg { fill: #fbfbfd; }
+      .title { fill: #162033; font: 700 28px Arial, sans-serif; }
+      .sub { fill: #5a667a; font: 400 14px Arial, sans-serif; }
+      .card { rx: 13; filter: url(#shadow); }
+      .kicker { fill: #536174; font: 700 12px Arial, sans-serif; letter-spacing: 0.8px; }
+      .value { fill: #151f31; font: 700 29px Arial, sans-serif; }
+      .note { fill: #4c5a70; font: 400 13px Arial, sans-serif; }
+      .axis { stroke: #d8deea; stroke-width: 1; }
+      .barlabel { fill: #24324b; font: 700 13px Arial, sans-serif; }
+      .warn { fill: #7c4a03; font: 700 12px Arial, sans-serif; }
+    </style>
+  </defs>
+  <rect class="bg" width="1180" height="500"/>
+  <text x="48" y="48" class="title">Development-Sample Diagnostics</text>
+  <text x="48" y="76" class="sub">Aggregate private-run evidence only. No WRDS row-level data, generated tables, or rendered private dashboards are included in the public repository.</text>
+
+  <rect x="50" y="112" width="248" height="118" class="card" fill="#c9e9e4"/>
+  <text x="74" y="142" class="kicker">MONTHLY PANEL ROWS</text>
+  <text x="74" y="181" class="value">936,897</text>
+  <text x="74" y="207" class="note">firm-month modeling panel</text>
+
+  <rect x="328" y="112" width="248" height="118" class="card" fill="#fde6bd"/>
+  <text x="352" y="142" class="kicker">JOINED TOKEN ROWS</text>
+  <text x="352" y="181" class="value">2,811,167</text>
+  <text x="352" y="207" class="note">segment-token macro joins</text>
+
+  <rect x="606" y="112" width="248" height="118" class="card" fill="#d9d7f7"/>
+  <text x="630" y="142" class="kicker">MACRO FEATURE COUNT</text>
+  <text x="630" y="181" class="value">24</text>
+  <text x="630" y="207" class="note">full configured catalog</text>
+
+  <rect x="884" y="112" width="248" height="118" class="card" fill="#d5ecb4"/>
+  <text x="908" y="142" class="kicker">MACRO COVERAGE</text>
+  <text x="908" y="181" class="value">100%</text>
+  <text x="908" y="207" class="note">development panel coverage</text>
+
+  <rect x="50" y="272" width="520" height="160" class="card" fill="#ffffff"/>
+  <text x="78" y="305" class="kicker">MODEL SPREAD DIAGNOSTICS</text>
+  <line x1="108" y1="392" x2="508" y2="392" class="axis"/>
+  <line x1="108" y1="332" x2="108" y2="392" class="axis"/>
+  <rect x="154" y="343" width="86" height="49" rx="7" fill="#58b7ad"/>
+  <rect x="298" y="334" width="86" height="58" rx="7" fill="#746bd1"/>
+  <text x="142" y="418" class="barlabel">Full catalog</text>
+  <text x="284" y="418" class="barlabel">FRED initial</text>
+  <text x="158" y="333" class="note">0.795%</text>
+  <text x="304" y="324" class="note">0.883%</text>
+  <text x="420" y="360" class="note">Monthly Q5-Q1</text>
+  <text x="420" y="381" class="note">LightGBM spread</text>
+
+  <rect x="610" y="272" width="522" height="160" class="card" fill="#ffffff"/>
+  <text x="638" y="305" class="kicker">RESEARCH STATUS</text>
+  <circle cx="667" cy="346" r="12" fill="#2f9e73"/>
+  <text x="690" y="351" class="note">Full proposal-grade development pipeline completed</text>
+  <circle cx="667" cy="382" r="12" fill="#2f9e73"/>
+  <text x="690" y="387" class="note">Claim ledger, tables, visual pack, and release audit pass</text>
+  <circle cx="667" cy="418" r="12" fill="#f0b429"/>
+  <text x="690" y="423" class="warn">2026 holdout is frozen and unopened</text>
+
+  <text x="50" y="472" class="sub">Public-safe aggregate snapshot. Final paper claims require future authorized holdout evaluation and author sign-off.</text>
+</svg>

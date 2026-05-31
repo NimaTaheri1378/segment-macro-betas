@@ -34,6 +34,9 @@ class ReleaseAuditTests(unittest.TestCase):
     def test_release_audit_requires_public_scripts_and_docs(self) -> None:
         required = set(release_audit.REQUIRED_PUBLIC_FILES)
         self.assertIn("docs/output_inventory.md", required)
+        self.assertIn("docs/figures/diagnostic_snapshot.svg", required)
+        self.assertIn("docs/figures/pipeline_architecture.svg", required)
+        self.assertIn("docs/figures/release_boundary.svg", required)
         self.assertIn("scripts/run_visual_pack.sh", required)
         self.assertIn("scripts/run_lgbm_benchmark.sh", required)
         self.assertIn("scripts/run_segment_set_model.sh", required)

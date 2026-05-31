@@ -8,6 +8,22 @@
   <b>Python | WRDS-scale data engineering | Point-in-time finance ML | Public-safe code release</b>
 </p>
 
+<p align="center">
+  <a href="https://github.com/NimaTaheri1378/segment-macro-betas/actions/workflows/ci.yml">
+    <img alt="CI" src="https://github.com/NimaTaheri1378/segment-macro-betas/actions/workflows/ci.yml/badge.svg?branch=main">
+  </a>
+  <a href="LICENSE">
+    <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-green.svg">
+  </a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
+  <img alt="WRDS data not redistributed" src="https://img.shields.io/badge/data-WRDS_not_redistributed-orange.svg">
+  <img alt="Release audit passing" src="https://img.shields.io/badge/release_audit-passing-2f9e73.svg">
+</p>
+
+<p align="center">
+  <img src="docs/figures/diagnostic_snapshot.svg" alt="Development-sample diagnostic snapshot" width="900">
+</p>
+
 ## Executive Summary
 
 This repository is the public-safe version of a full empirical finance project.
@@ -20,6 +36,30 @@ system. The public repository contains source code, configuration files,
 documentation, tests, CI, and regeneration scripts. Raw WRDS extracts,
 credentials, cluster logs, private Parquet caches, generated figures,
 dashboards, and row-level outputs are excluded.
+
+## Visual Overview
+
+<p align="center">
+  <img src="docs/figures/pipeline_architecture.svg" alt="Pipeline architecture" width="900">
+</p>
+
+<table>
+<tr>
+<td width="50%">
+  <img src="docs/figures/release_boundary.svg" alt="Public-safe release boundary" width="100%">
+  <br><b>Release boundary.</b><br>
+  Public code, tests, documentation, and aggregate schematics are tracked.
+  Licensed data, row-level panels, private logs, and generated dashboards stay
+  outside Git.
+</td>
+<td width="50%">
+  <img src="docs/figures/diagnostic_snapshot.svg" alt="Private diagnostic aggregate snapshot" width="100%">
+  <br><b>Diagnostic snapshot.</b><br>
+  The headline numbers are aggregate development-sample diagnostics, not raw
+  WRDS rows or final paper claims.
+</td>
+</tr>
+</table>
 
 ## Research Question
 
@@ -58,6 +98,9 @@ revision-safe wording is limited to the included FRED initial-release chain.
 
 ## Pipeline Architecture
 
+The public-safe SVG above is the primary architecture diagram. The Mermaid
+version below is kept as a text-native rendering of the same workflow.
+
 ```mermaid
 flowchart LR
     A[Compustat segment disclosures] --> B[Point-in-time segment activation]
@@ -76,7 +119,8 @@ flowchart LR
 ## Visual And Output Layer
 
 The visual layer is implemented as code and verified against private ignored
-artifacts. Rendered WRDS-derived outputs are intentionally not tracked.
+artifacts. Public-safe aggregate schematics are tracked under `docs/figures/`;
+row-level WRDS-derived outputs and private dashboards are not tracked.
 
 Implemented outputs include:
 
@@ -91,7 +135,7 @@ Implemented outputs include:
 - 2026 holdout protocol freeze manifest.
 
 See `docs/output_inventory.md` for the public-safe inventory of verified
-private outputs and regeneration commands.
+private outputs, tracked public figures, and regeneration commands.
 
 ## What Is Public Here
 

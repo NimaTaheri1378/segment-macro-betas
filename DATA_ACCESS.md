@@ -12,9 +12,15 @@ Required private sources:
 - SEC EDGAR automated access should use a local User-Agent/contact string.
 
 Public repository artifacts should contain code, documentation, configuration
-templates, synthetic fixtures, and public-safe manifests only. Tables and
-figures generated from private WRDS data remain ignored until explicitly
-reviewed for publication.
+templates, synthetic fixtures, public-safe manifests, and aggregate figures or
+tables that have been explicitly reviewed for publication. Raw data,
+row-level outputs, firm/security-month panels, private dashboards, and
+machine-readable files that could reconstruct licensed data remain excluded.
+
+Publications, presentations, and public repositories that rely on WRDS data
+should acknowledge WRDS and the relevant third-party data suppliers, consistent
+with institutional subscription terms. This repository does not redistribute
+raw or row-level WRDS data.
 
 Set the active Amarel project workspace outside version control:
 

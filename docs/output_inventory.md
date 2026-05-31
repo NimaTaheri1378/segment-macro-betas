@@ -1,8 +1,9 @@
 # Output Inventory
 
 This repository is prepared as a public-safe code and documentation release.
-The rendered research outputs below are WRDS-derived or private-run artifacts,
-so they are intentionally ignored and are not part of the public tree.
+Aggregate schematics and reviewed summary figures may be tracked, while raw
+WRDS-derived data, row-level outputs, private dashboards, and machine-readable
+artifacts that could reconstruct licensed data remain ignored.
 
 Tracked public assets:
 
@@ -13,6 +14,8 @@ Tracked public assets:
   root and allocation id through `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - Public configs, tests, documentation, CI, `.env.example`, and data-access
   notes.
+- Public-safe SVG figures under `docs/figures/` that summarize the pipeline,
+  diagnostic frontier, and release boundary without row-level data.
 
 Private ignored outputs verified locally:
 
@@ -67,5 +70,6 @@ python scripts/private_state_audit.py --run-id <run_id>
 python -m unittest discover -s tests
 ```
 
-The public release should include the code that creates the outputs, not the
-WRDS-derived outputs themselves.
+The public release may include reviewed aggregate figures and tables. It should
+not include row-level WRDS-derived outputs, private dashboards, caches, logs,
+or any file that redistributes or reconstructs licensed data.
