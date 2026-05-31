@@ -18,3 +18,9 @@ point_in_time:
   no_lookahead_rule: "features dated t may only predict returns after the activation date"
   filing_date_source_priority: ["pdate", "fdate", "srcdate_fallback"]
   activation_lag_days: 1
+
+macro_tensor:
+  geography_to_macro_area: "canonical rule map with USA, Canada, China, Europe, Asia ex-China, LatAm, Middle East, and other foreign buckets"
+  timing_rule: "macro values are joined as of available_date, realtime_start, or release_date when present"
+  fallback_rule: "observation-date fallback is allowed only with a manifest vintage_safe=false flag"
+  output_unit: "firm_month plus optional segment-token tensor"

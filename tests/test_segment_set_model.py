@@ -7,6 +7,7 @@ from segment_macro_betas.segment_set_model import (
     build_panel_frame,
     encode_panel_sets,
     normalize_geo_label,
+    parse_device_type,
     parse_variants,
     prepare_segment_tokens,
 )
@@ -76,6 +77,12 @@ class SegmentSetModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_variants("not_a_variant")
         self.assertEqual(normalize_geo_label(" us "), "US")
+
+    def test_parse_device_type(self) -> None:
+        self.assertEqual(parse_device_type(None), "auto")
+        self.assertEqual(parse_device_type("CUDA"), "cuda")
+        with self.assertRaises(ValueError):
+            parse_device_type("tpu")
 
 
 if __name__ == "__main__":

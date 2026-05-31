@@ -1,7 +1,7 @@
 import pandas as pd
 import unittest
 
-from segment_macro_betas.lgbm_benchmark import build_feature_frame, make_yearly_folds, monthly_rank_ic, parse_variants, select_features
+from segment_macro_betas.lgbm_benchmark import build_feature_frame, make_yearly_folds, monthly_rank_ic, parse_lgbm_device_type, parse_variants, select_features
 
 
 class LgbmBenchmarkTests(unittest.TestCase):
@@ -49,6 +49,12 @@ class LgbmBenchmarkTests(unittest.TestCase):
         self.assertEqual(selected, ["foreign_share"])
         with self.assertRaises(ValueError):
             parse_variants("unknown")
+
+    def test_parse_lgbm_device_type(self) -> None:
+        self.assertEqual(parse_lgbm_device_type(None), "auto")
+        self.assertEqual(parse_lgbm_device_type("GPU"), "gpu")
+        with self.assertRaises(ValueError):
+            parse_lgbm_device_type("tpu")
 
     def test_monthly_rank_ic_skips_tiny_months(self) -> None:
         predictions = pd.DataFrame(

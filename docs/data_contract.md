@@ -22,3 +22,10 @@ fields, Compustat `pdate`/`fdate`, and the derived `filing_date`. Panel
 construction uses this date plus one day as the preferred segment activation
 timestamp, falling back to `srcdate` plus one day when no filing-date match is
 available.
+
+The macro tensor builder expects a cached macro Parquet file under
+`data/raw/<macro_run_id>/`. The default dataset name is
+`macro_fred_monthly.parquet`, with columns `series_id`, `date`, and `value`.
+Optional timing columns `available_date`, `realtime_start`, or `release_date`
+are used for as-of joins; if none are present, the manifest records an
+observation-date fallback and `vintage_safe=false`.

@@ -28,6 +28,8 @@ validation year, it trains only on earlier firm-months and predicts
 next-month excess returns for that validation year. The primary metric is the
 monthly rank IC of predictions; the secondary diagnostic forms monthly
 prediction quintiles and tracks the equal-weight Q5 minus Q1 return spread.
+The runner defaults to `LGBM_DEVICE_TYPE=auto`, which attempts LightGBM GPU
+training and records any CPU fallback in the manifest.
 
 The benchmark reports feature ablations rather than a single headline model.
 The core variants compare the full feature set with versions that remove
@@ -41,7 +43,15 @@ than collapsing the snapshot immediately to summary statistics. The current
 benchmark uses a Deep Sets encoder with geography-token embeddings and
 revenue-share weights. It reports a `set_only` variant and a
 `set_plus_controls` variant under the same expanding yearly validation design
-as the tabular benchmarks.
+as the tabular benchmarks. The PyTorch runner defaults to `SET_DEVICE_TYPE=auto`
+and uses CUDA when the allocation exposes a GPU.
+
+The macro-tensor layer joins each segment token to cached macro states by
+canonical macro area. It uses `available_date`, `realtime_start`, or
+`release_date` when those fields exist, so macro observations are as-of joined
+to the firm-month. If a cached macro file lacks vintage or release timing, the
+manifest marks the run as not fully vintage-safe instead of silently promoting
+it to a final result.
 
 The visual pack is generated from private manifests and ignored artifacts. It
 collects sample coverage, filing-date activation coverage, exposure

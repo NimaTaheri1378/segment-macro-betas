@@ -30,6 +30,7 @@ SET_VARIANTS = {
     "set_only": [],
     "set_plus_controls": CONTROL_FEATURES,
 }
+SET_DEVICE_TYPES = {"auto", "cpu", "cuda"}
 
 
 def now_iso() -> str:
@@ -44,6 +45,23 @@ def parse_variants(raw: str | None) -> list[str]:
     if unknown:
         raise ValueError(f"Unknown set-model variant(s): {', '.join(unknown)}")
     return variants
+
+
+def parse_device_type(raw: str | None) -> str:
+    value = (raw or "auto").strip().lower()
+    if value not in SET_DEVICE_TYPES:
+        raise ValueError(f"Unknown set-model device type: {value}")
+    return value
+
+
+def select_torch_device(torch_module, device_type: str):
+    if device_type == "cpu":
+        return torch_module.device("cpu")
+    if device_type == "cuda":
+        if not torch_module.cuda.is_available():
+            raise RuntimeError("CUDA was requested for the segment-set model, but torch.cuda.is_available() is false.")
+        return torch_module.device("cuda")
+    return torch_module.device("cuda" if torch_module.cuda.is_available() else "cpu")
 
 
 def normalize_geo_label(value: Any) -> str:
@@ -192,7 +210,8 @@ def fit_predict_deepsets(
     learning_rate: float,
     max_train_rows_per_fold: int | None,
     seed: int,
-) -> dict[str, pd.DataFrame]:
+    device_type: str = "auto",
+) -> tuple[dict[str, pd.DataFrame], dict[str, Any]]:
     import torch
     from torch import nn
     from torch.utils.data import DataLoader, TensorDataset
@@ -227,7 +246,15 @@ def fit_predict_deepsets(
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
     torch.set_num_threads(1)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = select_torch_device(torch, device_type)
+    if device.type == "cuda":
+        torch.cuda.manual_seed_all(seed)
+    runtime = {
+        "device_type_requested": device_type,
+        "torch_device": str(device),
+        "cuda_available": bool(torch.cuda.is_available()),
+        "cuda_device_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+    }
     dates = pd.to_datetime(frame["date"])
     target = frame[TARGET].to_numpy(dtype=np.float32)
     controls_all = frame[control_features].to_numpy(dtype=np.float32) if control_features else np.zeros((len(frame), 0), dtype=np.float32)
@@ -296,10 +323,11 @@ def fit_predict_deepsets(
             pred_frame["variant"] = variant
             predictions_by_variant[variant].append(pred_frame)
 
-    return {
+    predictions = {
         variant: pd.concat(chunks, ignore_index=True) if chunks else pd.DataFrame()
         for variant, chunks in predictions_by_variant.items()
     }
+    return predictions, runtime
 
 
 def render_figures(figures_dir: Path, variant: str, spread: pd.DataFrame, rank_ic: pd.DataFrame) -> dict[str, str | None]:
@@ -383,6 +411,7 @@ def run_segment_set_model(
     min_train_months: int,
     max_train_rows_per_fold: int | None,
     seed: int,
+    device_type: str = "auto",
 ) -> dict[str, Any]:
     paths = make_run_paths(project_root, run_id)
     raw_root = ensure_within(project_root, project_root / "data" / "raw" / raw_run_id)
@@ -403,7 +432,7 @@ def run_segment_set_model(
     geo_ids = geo_ids[matched]
     shares = shares[matched]
     folds = make_yearly_folds(frame["date"], min_train_months=min_train_months)
-    predictions = fit_predict_deepsets(
+    predictions, runtime = fit_predict_deepsets(
         frame,
         geo_ids,
         shares,
@@ -416,6 +445,7 @@ def run_segment_set_model(
         learning_rate=learning_rate,
         max_train_rows_per_fold=max_train_rows_per_fold,
         seed=seed,
+        device_type=device_type,
     )
     variant_outputs: dict[str, Any] = {}
     summary_rows: list[dict[str, Any]] = []
@@ -445,6 +475,7 @@ def run_segment_set_model(
             "max_train_rows_per_fold": max_train_rows_per_fold,
             "seed": int(seed),
         },
+        "hardware": runtime,
         "inputs": {"panel": str(panel_path), "panel_rows": int(len(panel)), "frame_rows": int(len(frame)), "segment_rows": int(len(segments))},
         "set_encoding": set_checks,
         "control_features": control_features,
@@ -477,6 +508,7 @@ def report_text(manifest: dict[str, Any], summary: pd.DataFrame) -> str:
         f"- Panel run ID: `{manifest['panel_run_id']}`",
         f"- Status: `{manifest['status']}`",
         f"- Model: `{manifest['model']}`",
+        f"- Torch device: `{manifest.get('hardware', {}).get('torch_device')}`",
         "",
         "## Variant Summary",
         "",
@@ -507,6 +539,7 @@ def main() -> int:
     parser.add_argument("--min-train-months", type=int, default=36)
     parser.add_argument("--max-train-rows-per-fold", type=int, default=None)
     parser.add_argument("--seed", type=int, default=137)
+    parser.add_argument("--device-type", default="auto", choices=sorted(SET_DEVICE_TYPES))
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)
     manifest = run_segment_set_model(
@@ -523,6 +556,7 @@ def main() -> int:
         min_train_months=args.min_train_months,
         max_train_rows_per_fold=args.max_train_rows_per_fold,
         seed=args.seed,
+        device_type=parse_device_type(args.device_type),
     )
     print(f"status={manifest['status']}")
     print(f"manifest={project_root / 'runs' / args.run_id / 'manifests' / 'segment_set_model.json'}")

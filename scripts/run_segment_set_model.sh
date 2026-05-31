@@ -12,6 +12,7 @@ BATCH_SIZE="${BATCH_SIZE:-8192}"
 MAX_SEGMENTS="${MAX_SEGMENTS:-12}"
 MAX_VOCAB="${MAX_VOCAB:-512}"
 MAX_TRAIN_ROWS_PER_FOLD="${MAX_TRAIN_ROWS_PER_FOLD:-}"
+SET_DEVICE_TYPE="${SET_DEVICE_TYPE:-auto}"
 
 cd "$PROJECT_ROOT"
 mkdir -p "runs/${RUN_ID}/logs" "runs/${RUN_ID}/manifests" "runs/${RUN_ID}/reports"
@@ -28,6 +29,7 @@ export OPENBLAS_NUM_THREADS=1
   echo "variants=${VARIANTS}"
   echo "epochs=${EPOCHS}"
   echo "batch_size=${BATCH_SIZE}"
+  echo "set_device_type=${SET_DEVICE_TYPE}"
   echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "hostname=$(hostname)"
   echo "pwd=$(pwd)"
@@ -49,6 +51,7 @@ export OPENBLAS_NUM_THREADS=1
     --batch-size "$BATCH_SIZE"
     --max-segments "$MAX_SEGMENTS"
     --max-vocab "$MAX_VOCAB"
+    --device-type "$SET_DEVICE_TYPE"
   )
   if [[ -n "$MAX_TRAIN_ROWS_PER_FOLD" ]]; then
     args+=(--max-train-rows-per-fold "$MAX_TRAIN_ROWS_PER_FOLD")

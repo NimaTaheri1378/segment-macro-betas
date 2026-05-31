@@ -10,8 +10,12 @@ Implemented public code:
 - Restartable sharded WRDS extraction.
 - Filing-date activation supplement and point-in-time monthly panel builder.
 - Baseline portfolio and cross-sectional diagnostics.
+- Cached macro tensor construction with vintage-timing flags.
 - Expanding-window LightGBM benchmark with feature ablations.
 - Deep Sets segment-set benchmark.
+- GPU-aware model runners: PyTorch set models use CUDA when available, and
+  LightGBM attempts GPU training with an explicit manifest fallback if the
+  installed build lacks GPU support.
 - Static visual pack, HTML dashboard, and model-card generator.
 - Public safety and release audit checks.
 
@@ -22,8 +26,8 @@ status notes, not as final paper claims.
 Known gated items:
 
 - Macro API execution requires an untracked compute-host `.env`.
-- Vintage-safe macro interactions and the firm-geography-macro tensor remain a
-  gated extension.
+- Full vintage-safe macro interactions require private cached macro files with
+  release or realtime availability dates.
 - Set Transformer, factor alphas, transaction-cost tests, and 2026 holdout
   evaluation remain future stages.
 

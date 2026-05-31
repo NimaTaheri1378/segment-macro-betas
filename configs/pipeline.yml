@@ -3,6 +3,7 @@ stages:
   - smoke_panel
   - full_wrds_extract
   - macro_engine
+  - macro_tensor
   - filing_date_activation
   - point_in_time_features
   - econometric_baselines

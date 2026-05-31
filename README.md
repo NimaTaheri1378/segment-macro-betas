@@ -59,6 +59,16 @@ EXECUTE=0 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT"
   --ntasks=1 --cpus-per-task=1 bash scripts/run_macro_engine.sh
 ```
 
+Build the firm-geography-macro tensor from cached macro data:
+
+```bash
+RAW_RUN_ID=20260530T233446Z \
+PANEL_RUN_ID=20260531T003936Z_panel_filing \
+MACRO_RUN_ID=<macro-run-id> \
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=2 bash scripts/run_macro_tensor.sh
+```
+
 Build the monthly modeling panel from a completed raw run:
 
 ```bash
@@ -94,7 +104,8 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 By default this runner executes feature ablations: `all`,
 `no_market_factors`, `no_return_or_market`, `segment_only`, and
 `non_segment_controls`. Override with `VARIANTS=segment_only` for a targeted
-run.
+run. `LGBM_DEVICE_TYPE=auto` attempts LightGBM GPU training first and records
+any CPU fallback in the manifest.
 
 Run the Deep Sets segment-set extension:
 
@@ -103,6 +114,9 @@ RAW_RUN_ID=20260530T233446Z PANEL_RUN_ID=20260531T003936Z_panel_filing \
 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
   --ntasks=1 --cpus-per-task=8 bash scripts/run_segment_set_model.sh
 ```
+
+`SET_DEVICE_TYPE=auto` uses CUDA for the PyTorch Deep Sets model whenever the
+allocation exposes a GPU.
 
 Generate the private visual pack and model card:
 

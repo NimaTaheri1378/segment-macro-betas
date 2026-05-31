@@ -7,6 +7,10 @@ training:
   secondary_metric: predicted_quintile_q5_minus_q1
   min_train_months: 36
   holdout_start: "2026-01-01"
+hardware:
+  device_type: auto
+  gpu_policy: "attempt LightGBM GPU first; record CPU fallback if the installed build cannot use GPU"
+  current_ml_core_note: "GPU tree learner support depends on the installed LightGBM build"
 variants:
   - all
   - no_market_factors

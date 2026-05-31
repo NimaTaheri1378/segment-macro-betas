@@ -50,6 +50,7 @@ FEATURE_VARIANTS = {
     "segment_only": SEGMENT_FEATURES,
     "non_segment_controls": FIRM_FEATURES + RETURN_FEATURES + MARKET_FEATURES,
 }
+LGBM_DEVICE_TYPES = {"auto", "cpu", "gpu"}
 
 
 def now_iso() -> str:
@@ -115,6 +116,13 @@ def parse_variants(raw: str | None) -> list[str]:
     if unknown:
         raise ValueError(f"Unknown LightGBM variant(s): {', '.join(unknown)}")
     return variants
+
+
+def parse_lgbm_device_type(raw: str | None) -> str:
+    value = (raw or "auto").strip().lower()
+    if value not in LGBM_DEVICE_TYPES:
+        raise ValueError(f"Unknown LightGBM device type: {value}")
+    return value
 
 
 def select_features(available_features: list[str], variant: str) -> list[str]:
@@ -187,7 +195,8 @@ def fit_predict_lgbm(
     n_jobs: int,
     max_train_rows_per_fold: int | None = None,
     seed: int = 137,
-) -> tuple[pd.DataFrame, pd.DataFrame]:
+    device_type: str = "auto",
+) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, Any]]:
     try:
         import lightgbm as lgb
     except ImportError as exc:  # pragma: no cover - exercised on environments without optional dependency
@@ -195,6 +204,7 @@ def fit_predict_lgbm(
 
     prediction_frames: list[pd.DataFrame] = []
     importance_frames: list[pd.DataFrame] = []
+    runtime: dict[str, Any] = {"requested_device_type": device_type, "actual_device_types": [], "gpu_fallbacks": 0}
     for fold_index, fold in enumerate(folds):
         train_mask = (frame["date"] >= fold["train_start"]) & (frame["date"] <= fold["train_end"])
         val_mask = (frame["date"] >= fold["validation_start"]) & (frame["date"] <= fold["validation_end"])
@@ -205,25 +215,41 @@ def fit_predict_lgbm(
         if max_train_rows_per_fold and len(train) > max_train_rows_per_fold:
             train = train.sample(max_train_rows_per_fold, random_state=seed + fold_index)
 
-        model = lgb.LGBMRegressor(
-            objective="regression",
-            n_estimators=350,
-            learning_rate=0.035,
-            num_leaves=31,
-            min_child_samples=80,
-            subsample=0.85,
-            colsample_bytree=0.85,
-            reg_alpha=0.05,
-            reg_lambda=0.25,
-            random_state=seed,
-            n_jobs=n_jobs,
-            verbosity=-1,
-        )
-        model.fit(train[features], train[TARGET])
+        params: dict[str, Any] = {
+            "objective": "regression",
+            "n_estimators": 350,
+            "learning_rate": 0.035,
+            "num_leaves": 31,
+            "min_child_samples": 80,
+            "subsample": 0.85,
+            "colsample_bytree": 0.85,
+            "reg_alpha": 0.05,
+            "reg_lambda": 0.25,
+            "random_state": seed,
+            "n_jobs": n_jobs,
+            "verbosity": -1,
+        }
+        requested_fold_device = "gpu" if device_type == "auto" else device_type
+        if requested_fold_device == "gpu":
+            params["device_type"] = "gpu"
+        model = lgb.LGBMRegressor(**params)
+        actual_device = requested_fold_device
+        try:
+            model.fit(train[features], train[TARGET])
+        except Exception:
+            if device_type != "auto" or requested_fold_device != "gpu":
+                raise
+            runtime["gpu_fallbacks"] += 1
+            actual_device = "cpu"
+            params.pop("device_type", None)
+            model = lgb.LGBMRegressor(**params)
+            model.fit(train[features], train[TARGET])
+        runtime["actual_device_types"].append(actual_device)
         pred = val[["gvkey", "permno", "date", TARGET]].copy()
         pred["prediction"] = model.predict(val[features])
         pred["fold_year"] = fold["fold_year"]
         pred["train_rows"] = int(len(train))
+        pred["lgbm_device_type"] = actual_device
         prediction_frames.append(pred)
 
         importance_frames.append(
@@ -238,7 +264,8 @@ def fit_predict_lgbm(
 
     predictions = pd.concat(prediction_frames, ignore_index=True) if prediction_frames else pd.DataFrame()
     importances = pd.concat(importance_frames, ignore_index=True) if importance_frames else pd.DataFrame()
-    return predictions, importances
+    runtime["actual_device_types"] = sorted(set(runtime["actual_device_types"]))
+    return predictions, importances, runtime
 
 
 def render_figures(figures_dir: Path, spread: pd.DataFrame, rank_ic: pd.DataFrame, *, variant: str) -> dict[str, str | None]:
@@ -362,6 +389,7 @@ def run_lgbm_benchmark(
     min_train_months: int = 36,
     max_train_rows_per_fold: int | None = None,
     variants: list[str] | None = None,
+    device_type: str = "auto",
 ) -> dict[str, Any]:
     paths = make_run_paths(project_root, run_id)
     panel_path = ensure_within(project_root, project_root / "data" / "interim" / panel_run_id / "monthly_panel.parquet")
@@ -377,14 +405,16 @@ def run_lgbm_benchmark(
     variant_outputs: dict[str, Any] = {}
     summary_rows: list[dict[str, Any]] = []
     feature_importance_by_variant: dict[str, pd.DataFrame] = {}
+    runtime_by_variant: dict[str, Any] = {}
     for variant in variants:
         variant_features = select_features(features, variant)
-        predictions, importances = fit_predict_lgbm(
+        predictions, importances, runtime = fit_predict_lgbm(
             frame,
             variant_features,
             folds,
             n_jobs=n_jobs,
             max_train_rows_per_fold=max_train_rows_per_fold,
+            device_type=device_type,
         )
         if len(predictions):
             predictions["variant"] = variant
@@ -401,6 +431,7 @@ def run_lgbm_benchmark(
         variant_outputs[variant] = variant_manifest
         summary_rows.append(summary_row)
         feature_importance_by_variant[variant] = feature_importance
+        runtime_by_variant[variant] = runtime
 
     summary = pd.DataFrame(summary_rows)
     summary_path = tables_dir / "lgbm_summary.csv"
@@ -413,6 +444,7 @@ def run_lgbm_benchmark(
         "created_utc": now_iso(),
         "project_root": str(project_root),
         "model": "lightgbm_regressor_expanding_yearly",
+        "hardware": {"device_type_requested": device_type, "runtime_by_variant": runtime_by_variant},
         "available_features": features,
         "requested_variants": variants,
         "validation": {
@@ -451,6 +483,7 @@ def report_text(manifest: dict[str, Any], summary: pd.DataFrame, feature_importa
         f"- Status: `{manifest['status']}`",
         f"- Validation: `{manifest['validation']['scheme']}`",
         f"- Variants: `{', '.join(manifest['requested_variants'])}`",
+        f"- LightGBM device request: `{manifest.get('hardware', {}).get('device_type_requested')}`",
         "",
         "## Variant Summary",
         "",
@@ -480,6 +513,7 @@ def main() -> int:
     parser.add_argument("--min-train-months", type=int, default=36)
     parser.add_argument("--max-train-rows-per-fold", type=int, default=None)
     parser.add_argument("--variants", default="all")
+    parser.add_argument("--device-type", default="auto", choices=sorted(LGBM_DEVICE_TYPES))
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)
     manifest = run_lgbm_benchmark(
@@ -490,6 +524,7 @@ def main() -> int:
         min_train_months=args.min_train_months,
         max_train_rows_per_fold=args.max_train_rows_per_fold,
         variants=parse_variants(args.variants),
+        device_type=parse_lgbm_device_type(args.device_type),
     )
     print(f"status={manifest['status']}")
     print(f"manifest={project_root / 'runs' / args.run_id / 'manifests' / 'lgbm_benchmark.json'}")

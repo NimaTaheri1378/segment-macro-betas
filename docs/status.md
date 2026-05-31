@@ -6,6 +6,7 @@ Implemented stages:
 - Sharded WRDS extraction for the 2006-2025 development window.
 - Point-in-time monthly modeling panel construction with filing-date activation
   support.
+- Cached macro tensor builder with vintage-timing flags.
 - Targeted filing-date supplement run `20260531T003829Z_filing` and activated
   panel run `20260531T003936Z_panel_filing`.
 - First-pass exposure-sorted portfolios, rank ICs, and cross-sectional slopes.
@@ -64,6 +65,25 @@ Latest public release-prep check:
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
+
+Latest macro-tensor code status:
+
+- Public code can construct firm-month macro interaction features and
+  segment-token macro tensors from cached private macro Parquet files.
+- Macro timing uses `available_date`, `realtime_start`, or `release_date` when
+  present; observation-date fallback is explicitly flagged as not fully
+  vintage-safe.
+- Full macro API execution is still gated on untracked compute-host secrets.
+
+Latest GPU modeling code status:
+
+- LightGBM runner now has `LGBM_DEVICE_TYPE=auto`, attempting GPU training and
+  recording any CPU fallback in the manifest.
+- Deep Sets runner now has `SET_DEVICE_TYPE=auto`, recording the selected
+  PyTorch device and CUDA device name in the manifest.
+- Allocation smoke check: PyTorch selected `cuda` on the A100. The current
+  `ml_core` LightGBM build does not enable the GPU tree learner, so LightGBM
+  auto mode records a CPU fallback.
 
 Private artifacts remain ignored:
 

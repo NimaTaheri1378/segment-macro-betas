@@ -16,6 +16,9 @@ training:
   default_epochs: 3
   default_max_segments: 12
   default_max_vocab: 512
+hardware:
+  device_type: auto
+  gpu_policy: "use CUDA for PyTorch Deep Sets whenever torch.cuda.is_available()"
 stretch:
   - set_transformer
   - segment_macro_tokens_with_vintages
