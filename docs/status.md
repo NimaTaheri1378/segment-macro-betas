@@ -16,6 +16,7 @@ Implemented stages:
   `20260531T010832Z_set`.
 - Optional Set Transformer segment-set variant.
 - Factor-alpha and turnover robustness runner from cached model predictions.
+- Claim-ledger and table-inventory generator for wording discipline.
 - Visual pack and model-card generator, with private visual pack run
   `20260531T_visual_pack`.
 - Public-safe release audit script and release notes.
@@ -68,6 +69,16 @@ Latest private factor robustness diagnostic:
 - Segment-only LightGBM robustness: mean net Q5-Q1 `0.003756`, t-stat
   `1.920601`, gross monthly alpha `0.001023`.
 
+Latest private claim ledger:
+
+- Run: `20260531T_claim_ledger`.
+- Claim rows: `6`.
+- Validation failures: `0`.
+- Blocked claims: `1` for live macro execution.
+- Table-inventory rows: `36`.
+- Allowed wording is diagnostic-only and keeps macro-vintage and 2026 holdout
+  claims blocked.
+
 Latest private visual pack:
 
 - Run: `20260531T_visual_pack`.
@@ -84,9 +95,9 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 50 unit tests.
+- Local checks passed: release audit, public safety scan, and 53 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 50 unit tests.
+  audit, public safety scan, and 53 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
