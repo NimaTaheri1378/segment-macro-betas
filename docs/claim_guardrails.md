@@ -15,8 +15,8 @@ Allowed current wording:
   robustness run.
 - Deep Sets validates the segment-set modeling path, but does not currently
   dominate the tabular benchmark.
-- The Set Transformer path has passed a bounded GPU runtime smoke, not a full
-  scale empirical comparison.
+- The full Set Transformer path runs on CUDA, but remains a weak diagnostic
+  relative to the current LightGBM spread and alpha results.
 
 Forbidden current wording:
 

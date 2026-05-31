@@ -24,6 +24,29 @@ def read_optional_csv(path: Path) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
+def parse_run_ids(raw: str | list[str]) -> list[str]:
+    if isinstance(raw, list):
+        run_ids = raw
+    else:
+        run_ids = [piece.strip() for piece in raw.split(",")]
+    out = [run_id for run_id in run_ids if run_id]
+    if not out:
+        raise ValueError("At least one run id is required.")
+    return out
+
+
+def read_set_summaries(tables_root: Path, set_run_ids: list[str]) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    for run_id in set_run_ids:
+        frame = read_optional_csv(tables_root / run_id / "deepsets_summary.csv")
+        if frame.empty:
+            continue
+        frame = frame.copy()
+        frame["model_run_id"] = run_id
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True, sort=False) if frames else pd.DataFrame()
+
+
 def best_row(frame: pd.DataFrame, column: str) -> dict[str, Any] | None:
     if frame.empty or column not in frame.columns:
         return None
@@ -125,6 +148,24 @@ def build_claim_ledger(
                     ),
                     "Set models outperform all tabular benchmarks or establish a superior architecture.",
                     "Treat as first architecture evidence; full Set Transformer scaling remains optional and diagnostic.",
+                )
+            )
+        transformer = set_summary[set_summary.get("variant", pd.Series(dtype=str)) == "set_transformer"]
+        if len(transformer):
+            row = transformer.iloc[0]
+            strength = "passed diagnostic" if float(row.get("t_rank_ic", 0.0)) > 2 else "weak diagnostic"
+            rows.append(
+                claim_row(
+                    "Segment-set models",
+                    "The full Set Transformer run is executable on CUDA but does not dominate the tabular benchmarks.",
+                    strength,
+                    f"{row.get('model_run_id', set_run_id)}:deepsets_summary.csv",
+                    (
+                        "The full Set Transformer variant completed on CUDA with mean rank IC "
+                        f"{fmt(row.get('mean_rank_ic'))} and mean Q5-Q1 {fmt(row.get('mean_q5_minus_q1'))}."
+                    ),
+                    "Set Transformer attention materially improves the economic long-short result.",
+                    "Treat as a full-scale architecture diagnostic; it remains weaker than the current LightGBM spread diagnostics.",
                 )
             )
 
@@ -244,7 +285,7 @@ def run_claim_ledger(
     run_id: str,
     panel_run_id: str,
     lgbm_run_id: str,
-    set_run_id: str,
+    set_run_ids: list[str],
     factor_run_id: str,
 ) -> dict[str, Any]:
     paths = make_run_paths(project_root, run_id)
@@ -253,12 +294,12 @@ def run_claim_ledger(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     lgbm_summary = read_optional_csv(tables_root / lgbm_run_id / "lgbm_summary.csv")
-    set_summary = read_optional_csv(tables_root / set_run_id / "deepsets_summary.csv")
+    set_summary = read_set_summaries(tables_root, set_run_ids)
     factor_summary = read_optional_csv(tables_root / factor_run_id / "factor_robustness_summary.csv")
     ledger = build_claim_ledger(
         panel_run_id=panel_run_id,
         lgbm_run_id=lgbm_run_id,
-        set_run_id=set_run_id,
+        set_run_id=",".join(set_run_ids),
         factor_run_id=factor_run_id,
         lgbm_summary=lgbm_summary,
         set_summary=set_summary,
@@ -266,7 +307,7 @@ def run_claim_ledger(
     )
     validation = validate_claims(ledger)
     inventory = build_table_inventory(
-        {"lgbm": lgbm_run_id, "set": set_run_id, "factor": factor_run_id},
+        {"lgbm": lgbm_run_id, **{f"set_{idx + 1}": value for idx, value in enumerate(set_run_ids)}, "factor": factor_run_id},
         tables_root,
     )
 
@@ -285,7 +326,7 @@ def run_claim_ledger(
         "inputs": {
             "panel_run_id": panel_run_id,
             "lgbm_run_id": lgbm_run_id,
-            "set_run_id": set_run_id,
+            "set_run_ids": set_run_ids,
             "factor_run_id": factor_run_id,
         },
         "outputs": {
@@ -312,7 +353,7 @@ def main() -> int:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--panel-run-id", required=True)
     parser.add_argument("--lgbm-run-id", required=True)
-    parser.add_argument("--set-run-id", required=True)
+    parser.add_argument("--set-run-id", required=True, help="Set-model run id, or comma-separated run ids.")
     parser.add_argument("--factor-run-id", required=True)
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)
@@ -321,7 +362,7 @@ def main() -> int:
         args.run_id,
         args.panel_run_id,
         args.lgbm_run_id,
-        args.set_run_id,
+        parse_run_ids(args.set_run_id),
         args.factor_run_id,
     )
     print(f"status={manifest['status']}")

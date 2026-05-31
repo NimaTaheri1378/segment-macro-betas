@@ -39,6 +39,27 @@ def read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def parse_run_ids(raw: str | list[str]) -> list[str]:
+    if isinstance(raw, list):
+        run_ids = raw
+    else:
+        run_ids = [piece.strip() for piece in raw.split(",")]
+    out = [run_id for run_id in run_ids if run_id]
+    if not out:
+        raise ValueError("At least one run id is required.")
+    return out
+
+
+def read_set_summaries(project_root: Path, set_run_ids: list[str]) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    for run_id in set_run_ids:
+        path = project_root / "artifacts" / "tables" / run_id / "deepsets_summary.csv"
+        frame = pd.read_csv(path)
+        frame["model_run_id"] = run_id
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True, sort=False)
+
+
 def fmt(value: Any, digits: int = 4) -> str:
     if value is None or (isinstance(value, float) and not np.isfinite(value)):
         return "n/a"
@@ -83,6 +104,8 @@ def build_model_comparison(lgbm: pd.DataFrame, deepsets: pd.DataFrame) -> pd.Dat
     b = deepsets.copy()
     b["family"] = "Deep Sets"
     b = b.rename(columns={"features": "features"})
+    if "architecture" in b.columns:
+        b["architecture"] = b["architecture"].fillna("deep_sets").replace("", "deep_sets")
     cols = ["family", "variant", "prediction_rows", "rank_ic_months", "mean_rank_ic", "t_rank_ic", "mean_q5_minus_q1", "t_q5_minus_q1"]
     combined = pd.concat([a, b], ignore_index=True)
     return combined[[col for col in cols if col in combined.columns]]
@@ -327,6 +350,7 @@ def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, An
             "- The filing-date panel has zero activation-rule violations in the manifest.",
             "- Segment-only tabular features rank returns strongly, but control-rich variants produce stronger long-short spreads.",
             "- The first Deep Sets extension has modest positive rank IC in the set-only variant and weak long-short spread.",
+            "- The full Set Transformer run is a CUDA-validated architecture diagnostic, not a dominant economic spread result.",
             "- Macro API/vintage execution remains dry-run until private compute-host secret handling is enabled.",
             "",
         ]
@@ -343,7 +367,7 @@ def run_visual_pack(
     panel_run_id: str,
     baseline_run_id: str,
     lgbm_run_id: str,
-    set_run_id: str,
+    set_run_ids: list[str],
 ) -> dict[str, Any]:
     paths = make_run_paths(project_root, run_id)
     raw_root = ensure_within(project_root, project_root / "data" / "raw" / raw_run_id)
@@ -358,7 +382,7 @@ def run_visual_pack(
     panel_manifest = read_json(project_root / "runs" / panel_run_id / "manifests" / "monthly_panel.json")
     panel = pd.read_parquet(panel_path)
     lgbm_summary = pd.read_csv(project_root / "artifacts" / "tables" / lgbm_run_id / "lgbm_summary.csv")
-    set_summary = pd.read_csv(project_root / "artifacts" / "tables" / set_run_id / "deepsets_summary.csv")
+    set_summary = read_set_summaries(project_root, set_run_ids)
     baseline_summary = pd.read_csv(project_root / "artifacts" / "tables" / baseline_run_id / "baseline_summary.csv")
     comparison = build_model_comparison(lgbm_summary, set_summary)
     matrix, firm_explorer = build_latest_segment_matrix(panel, raw_root)
@@ -388,7 +412,7 @@ def run_visual_pack(
             "panel_run_id": panel_run_id,
             "baseline_run_id": baseline_run_id,
             "lgbm_run_id": lgbm_run_id,
-            "set_run_id": set_run_id,
+            "set_run_ids": set_run_ids,
             "panel_rows": int(len(panel)),
             "baseline_summary_rows": int(len(baseline_summary)),
         },
@@ -435,7 +459,7 @@ def main() -> int:
     parser.add_argument("--panel-run-id", required=True)
     parser.add_argument("--baseline-run-id", required=True)
     parser.add_argument("--lgbm-run-id", required=True)
-    parser.add_argument("--set-run-id", required=True)
+    parser.add_argument("--set-run-id", required=True, help="Set-model run id, or comma-separated run ids.")
     args = parser.parse_args()
     project_root = require_project_root(resolve_project_root(args.project_root), SCRATCH_PROJECT_ROOT)
     manifest = run_visual_pack(
@@ -445,7 +469,7 @@ def main() -> int:
         args.panel_run_id,
         args.baseline_run_id,
         args.lgbm_run_id,
-        args.set_run_id,
+        parse_run_ids(args.set_run_id),
     )
     print(f"status={manifest['status']}")
     print(f"manifest={project_root / 'runs' / args.run_id / 'manifests' / 'visual_pack.json'}")

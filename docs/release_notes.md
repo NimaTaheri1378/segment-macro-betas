@@ -13,7 +13,7 @@ Implemented public code:
 - Public FRED/BLS/BEA/EIA macro-series catalog plus cached macro tensor
   construction with timing flags.
 - Expanding-window LightGBM benchmark with feature ablations.
-- Deep Sets segment-set benchmark plus optional Set Transformer variant.
+- Deep Sets segment-set benchmark plus full CUDA Set Transformer diagnostic.
 - Cached factor-alpha and turnover robustness diagnostics.
 - Publication-style private diagnostic table renderer for model comparison,
   factor-alpha, and turnover-cost outputs.
@@ -36,9 +36,8 @@ Known gated items:
 - Macro API execution requires an untracked compute-host `.env`.
 - Full vintage-safe macro interactions require private cached macro files with
   release or realtime availability dates.
-- Full Set Transformer scaling, live macro-vintage execution, final
-  transaction-cost/capacity claims, and 2026 holdout evaluation remain future
-  stages.
+- Live macro-vintage execution, final transaction-cost/capacity claims, and
+  2026 holdout evaluation remain future stages.
 
 Before pushing, run:
 

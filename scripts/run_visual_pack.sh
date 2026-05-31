@@ -8,6 +8,7 @@ PANEL_RUN_ID="${PANEL_RUN_ID:?PANEL_RUN_ID required}"
 BASELINE_RUN_ID="${BASELINE_RUN_ID:?BASELINE_RUN_ID required}"
 LGBM_RUN_ID="${LGBM_RUN_ID:?LGBM_RUN_ID required}"
 SET_RUN_ID="${SET_RUN_ID:?SET_RUN_ID required}"
+SET_RUN_IDS="${SET_RUN_IDS:-$SET_RUN_ID}"
 RUN_ID="${1:-$(date -u +%Y%m%dT%H%M%SZ)}"
 
 cd "$PROJECT_ROOT"
@@ -24,7 +25,7 @@ export OPENBLAS_NUM_THREADS=1
   echo "panel_run_id=${PANEL_RUN_ID}"
   echo "baseline_run_id=${BASELINE_RUN_ID}"
   echo "lgbm_run_id=${LGBM_RUN_ID}"
-  echo "set_run_id=${SET_RUN_ID}"
+  echo "set_run_ids=${SET_RUN_IDS}"
   echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "hostname=$(hostname)"
   echo "pwd=$(pwd)"
@@ -42,7 +43,7 @@ export OPENBLAS_NUM_THREADS=1
     --panel-run-id "$PANEL_RUN_ID" \
     --baseline-run-id "$BASELINE_RUN_ID" \
     --lgbm-run-id "$LGBM_RUN_ID" \
-    --set-run-id "$SET_RUN_ID"
+    --set-run-id "$SET_RUN_IDS"
 
   echo "finished_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 } > "runs/${RUN_ID}/logs/visual_pack.out" 2> "runs/${RUN_ID}/logs/visual_pack.err"

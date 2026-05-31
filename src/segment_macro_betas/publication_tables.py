@@ -57,6 +57,27 @@ def read_optional_csv(path: Path) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
+def parse_run_ids(raw: str | list[str]) -> list[str]:
+    if isinstance(raw, list):
+        run_ids = raw
+    else:
+        run_ids = [piece.strip() for piece in raw.split(",")]
+    out = [run_id for run_id in run_ids if run_id]
+    if not out:
+        raise ValueError("At least one run id is required.")
+    return out
+
+
+def read_set_summaries(tables_root: Path, set_run_ids: list[str]) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    for run_id in set_run_ids:
+        frame = read_required_csv(tables_root / run_id / "deepsets_summary.csv")
+        frame = frame.copy()
+        frame["model_run_id"] = run_id
+        frames.append(frame)
+    return pd.concat(frames, ignore_index=True, sort=False) if frames else pd.DataFrame()
+
+
 def as_number(value: Any) -> float | None:
     if value is None or pd.isna(value):
         return None
@@ -129,6 +150,7 @@ def build_model_comparison(lgbm_summary: pd.DataFrame, set_summary: pd.DataFrame
         set_models["model_family"] = "Deep Sets"
         if "architecture" not in set_models.columns:
             set_models["architecture"] = "deep_sets"
+        set_models["architecture"] = set_models["architecture"].fillna("deep_sets").replace("", "deep_sets")
         frames.append(set_models)
     if not frames:
         return pd.DataFrame(columns=list(DISPLAY_MODEL_COLUMNS))
@@ -286,7 +308,7 @@ def run_publication_tables(
     *,
     panel_run_id: str,
     lgbm_run_id: str,
-    set_run_id: str,
+    set_run_ids: list[str],
     factor_run_id: str,
     claim_run_id: str,
     cost_bps: float,
@@ -298,7 +320,7 @@ def run_publication_tables(
     out_dir.mkdir(parents=True, exist_ok=True)
 
     lgbm_summary = read_required_csv(tables_root / lgbm_run_id / "lgbm_summary.csv")
-    set_summary = read_required_csv(tables_root / set_run_id / "deepsets_summary.csv")
+    set_summary = read_set_summaries(tables_root, set_run_ids)
     factor_summary = read_required_csv(tables_root / factor_run_id / "factor_robustness_summary.csv")
     claim_validation = read_optional_csv(tables_root / claim_run_id / "claim_validation.csv")
 
@@ -339,7 +361,7 @@ def run_publication_tables(
         "inputs": {
             "panel_run_id": panel_run_id,
             "lgbm_run_id": lgbm_run_id,
-            "set_run_id": set_run_id,
+            "set_run_ids": set_run_ids,
             "factor_run_id": factor_run_id,
             "claim_run_id": claim_run_id,
         },
@@ -372,7 +394,7 @@ def main() -> int:
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--panel-run-id", required=True)
     parser.add_argument("--lgbm-run-id", required=True)
-    parser.add_argument("--set-run-id", required=True)
+    parser.add_argument("--set-run-id", required=True, help="Set-model run id, or comma-separated run ids.")
     parser.add_argument("--factor-run-id", required=True)
     parser.add_argument("--claim-run-id", required=True)
     parser.add_argument("--cost-bps", type=float, default=10.0)
@@ -384,7 +406,7 @@ def main() -> int:
         args.run_id,
         panel_run_id=args.panel_run_id,
         lgbm_run_id=args.lgbm_run_id,
-        set_run_id=args.set_run_id,
+        set_run_ids=parse_run_ids(args.set_run_id),
         factor_run_id=args.factor_run_id,
         claim_run_id=args.claim_run_id,
         cost_bps=args.cost_bps,

@@ -14,7 +14,7 @@ Implemented stages:
   filing-date ablation run `20260531T005001Z_lgbm_filing`.
 - Deep Sets segment-set model code, Slurm runner, and full-panel run
   `20260531T010832Z_set`.
-- Optional Set Transformer segment-set variant.
+- Full CUDA Set Transformer segment-set diagnostic.
 - Factor-alpha and turnover robustness runner from cached model predictions.
 - Claim-ledger and table-inventory generator for wording discipline.
 - Publication-style diagnostic table renderer for model comparison,
@@ -49,19 +49,20 @@ Latest private Deep Sets segment-set diagnostic:
 - Prediction rows per variant: `772000`.
 - `set_only`: mean rank IC `0.011294`, mean Q5-Q1 `0.001139`.
 - `set_plus_controls`: mean rank IC `-0.006154`, mean Q5-Q1 `0.002959`.
-- Optional `set_transformer` smoke run `20260531T_set_transformer_smoke`
-  completed on CUDA with 1 capped epoch, 772,000 prediction rows, mean rank IC
-  `0.001948`, and mean Q5-Q1 `0.001208`. Treat as a runtime check, not a full
-  scaled model result.
+- Full `set_transformer` run `20260531T_set_transformer_full` completed on
+  CUDA with 3 uncapped epochs, 772,000 prediction rows, mean rank IC
+  `0.007315`, and mean Q5-Q1 `0.000426`. Treat as a full-scale architecture
+  diagnostic, not as evidence that attention dominates the tabular benchmark.
 
 Latest private factor robustness diagnostic:
 
-- Run: `20260531T_factor_robustness_clean`.
+- Run: `20260531T_factor_robustness_with_transformer`.
 - Panel run: `20260531T003936Z_panel_filing`.
-- Model runs: `20260531T005001Z_lgbm_filing` and `20260531T010832Z_set`.
-- Prediction rows evaluated: `5404000`.
-- Variants evaluated: `7`.
-- Spread-month rows: `1337`.
+- Model runs: `20260531T005001Z_lgbm_filing`, `20260531T010832Z_set`, and
+  `20260531T_set_transformer_full`.
+- Prediction rows evaluated: `6176000`.
+- Variants evaluated: `8`.
+- Spread-month rows: `1528`.
 - Factor months available: `239`.
 - Cost assumption: `10` bps per one-way turnover.
 - Best net Q5-Q1 variant: `lgbm:non_segment_controls`, mean net Q5-Q1
@@ -70,26 +71,29 @@ Latest private factor robustness diagnostic:
   `0.006141`, t-stat `2.582860`.
 - Segment-only LightGBM robustness: mean net Q5-Q1 `0.003756`, t-stat
   `1.920601`, gross monthly alpha `0.001023`.
+- Full Set Transformer robustness: mean net Q5-Q1 `0.000367`, t-stat
+  `0.282725`, gross monthly alpha `-0.003558`.
 
 Latest private claim ledger:
 
-- Run: `20260531T_claim_ledger`.
-- Claim rows: `6`.
+- Run: `20260531T_claim_ledger_with_transformer`.
+- Claim rows: `7`.
 - Validation failures: `0`.
 - Blocked claims: `1` for live macro execution.
-- Table-inventory rows: `36`.
+- Table-inventory rows: `40`.
 - Allowed wording is diagnostic-only and keeps macro-vintage and 2026 holdout
   claims blocked.
 
 Latest private publication-style diagnostic tables:
 
-- Run: `20260531T_publication_tables_clean`.
+- Run: `20260531T_publication_tables_with_transformer_v2`.
 - Inputs: panel `20260531T003936Z_panel_filing`, LightGBM
-  `20260531T005001Z_lgbm_filing`, Deep Sets `20260531T010832Z_set`, factor
-  robustness `20260531T_factor_robustness_clean`, and claim ledger
-  `20260531T_claim_ledger`.
-- Model-comparison rows: `7`.
-- Factor-alpha and cost rows: `7`.
+  `20260531T005001Z_lgbm_filing`, Deep Sets `20260531T010832Z_set`, full Set
+  Transformer `20260531T_set_transformer_full`, factor robustness
+  `20260531T_factor_robustness_with_transformer`, and claim ledger
+  `20260531T_claim_ledger_with_transformer`.
+- Model-comparison rows: `8`.
+- Factor-alpha and cost rows: `8`.
 - Review failures: `0`.
 - Claim-validation failures: `0`.
 - Reports generated as ignored private Markdown/LaTeX artifacts under `runs/`;
@@ -97,9 +101,9 @@ Latest private publication-style diagnostic tables:
 
 Latest private visual pack:
 
-- Run: `20260531T_visual_pack`.
+- Run: `20260531T_visual_pack_with_transformer_v2`.
 - Figure count: `7`.
-- Model comparison rows: `7`.
+- Model comparison rows: `8`.
 - Firm explorer rows: `30`.
 - Sector-geography matrix shape: `10 x 10`.
 - Dashboard: ignored private HTML artifact under `artifacts/figures_html/`.
@@ -172,6 +176,6 @@ Next stages:
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.
-- Scale the optional Set Transformer only after deciding that its weak bounded
-  smoke diagnostic is worth the extra runtime.
+- Interpret the full Set Transformer carefully: it runs on CUDA but does not
+  improve the economic spread diagnostics in the current development sample.
 - Push only after explicit user approval and a final clean audit.

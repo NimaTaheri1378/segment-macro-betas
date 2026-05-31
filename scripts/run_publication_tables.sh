@@ -6,6 +6,7 @@ source "$SCRIPT_DIR/_amarel_env.sh"
 PANEL_RUN_ID="${PANEL_RUN_ID:?PANEL_RUN_ID required}"
 LGBM_RUN_ID="${LGBM_RUN_ID:?LGBM_RUN_ID required}"
 SET_RUN_ID="${SET_RUN_ID:?SET_RUN_ID required}"
+SET_RUN_IDS="${SET_RUN_IDS:-$SET_RUN_ID}"
 FACTOR_RUN_ID="${FACTOR_RUN_ID:?FACTOR_RUN_ID required}"
 CLAIM_RUN_ID="${CLAIM_RUN_ID:?CLAIM_RUN_ID required}"
 COST_BPS="${COST_BPS:-10}"
@@ -24,7 +25,7 @@ export OPENBLAS_NUM_THREADS=1
   echo "publication_tables_run_id=${RUN_ID}"
   echo "panel_run_id=${PANEL_RUN_ID}"
   echo "lgbm_run_id=${LGBM_RUN_ID}"
-  echo "set_run_id=${SET_RUN_ID}"
+  echo "set_run_ids=${SET_RUN_IDS}"
   echo "factor_run_id=${FACTOR_RUN_ID}"
   echo "claim_run_id=${CLAIM_RUN_ID}"
   echo "cost_bps=${COST_BPS}"
@@ -44,7 +45,7 @@ export OPENBLAS_NUM_THREADS=1
     --run-id "$RUN_ID" \
     --panel-run-id "$PANEL_RUN_ID" \
     --lgbm-run-id "$LGBM_RUN_ID" \
-    --set-run-id "$SET_RUN_ID" \
+    --set-run-id "$SET_RUN_IDS" \
     --factor-run-id "$FACTOR_RUN_ID" \
     --claim-run-id "$CLAIM_RUN_ID" \
     --cost-bps "$COST_BPS" \

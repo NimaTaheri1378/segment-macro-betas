@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from segment_macro_betas.claim_ledger import build_claim_ledger, build_table_inventory, validate_claims
+from segment_macro_betas.claim_ledger import build_claim_ledger, build_table_inventory, parse_run_ids, validate_claims
 
 
 class ClaimLedgerTests(unittest.TestCase):
@@ -20,7 +20,16 @@ class ClaimLedgerTests(unittest.TestCase):
             ]
         )
         sets = pd.DataFrame(
-            [{"variant": "set_only", "mean_rank_ic": 0.01, "t_rank_ic": 2.5, "mean_q5_minus_q1": 0.001}]
+            [
+                {"variant": "set_only", "mean_rank_ic": 0.01, "t_rank_ic": 2.5, "mean_q5_minus_q1": 0.001},
+                {
+                    "variant": "set_transformer",
+                    "model_run_id": "set_transformer",
+                    "mean_rank_ic": 0.007,
+                    "t_rank_ic": 1.9,
+                    "mean_q5_minus_q1": 0.0004,
+                },
+            ]
         )
         factors = pd.DataFrame(
             [
@@ -43,8 +52,9 @@ class ClaimLedgerTests(unittest.TestCase):
             set_summary=sets,
             factor_summary=factors,
         )
-        self.assertGreaterEqual(len(ledger), 5)
+        self.assertGreaterEqual(len(ledger), 6)
         self.assertTrue(ledger["allowed_wording"].str.contains("filing-date panel").any())
+        self.assertTrue(ledger["allowed_wording"].str.contains("Set Transformer").any())
         self.assertTrue(ledger["evidence_strength"].str.contains("blocked").any())
         validation = validate_claims(ledger)
         self.assertEqual(int((validation["status"] == "fail").sum()), 0)
@@ -62,6 +72,11 @@ class ClaimLedgerTests(unittest.TestCase):
         )
         validation = validate_claims(ledger)
         self.assertEqual(validation.loc[0, "status"], "fail")
+
+    def test_parse_run_ids(self) -> None:
+        self.assertEqual(parse_run_ids("set_a,set_b"), ["set_a", "set_b"])
+        with self.assertRaises(ValueError):
+            parse_run_ids("")
 
     def test_table_inventory_handles_missing_dirs(self) -> None:
         inventory = build_table_inventory({"missing": "nope"}, Path("."))

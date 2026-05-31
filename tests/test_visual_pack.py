@@ -4,7 +4,7 @@ from tempfile import TemporaryDirectory
 
 import pandas as pd
 
-from segment_macro_betas.visual_pack import build_model_comparison, fmt, sic_sector, write_dashboard
+from segment_macro_betas.visual_pack import build_model_comparison, fmt, parse_run_ids, sic_sector, write_dashboard
 
 
 class VisualPackTests(unittest.TestCase):
@@ -32,18 +32,24 @@ class VisualPackTests(unittest.TestCase):
         )
         deep = pd.DataFrame(
             {
-                "variant": ["set_only"],
-                "prediction_rows": [8],
-                "rank_ic_months": [2],
-                "mean_rank_ic": [0.05],
-                "t_rank_ic": [0.8],
-                "mean_q5_minus_q1": [0.01],
-                "t_q5_minus_q1": [0.4],
+                "variant": ["set_only", "set_transformer"],
+                "architecture": [None, "set_transformer"],
+                "prediction_rows": [8, 8],
+                "rank_ic_months": [2, 2],
+                "mean_rank_ic": [0.05, 0.01],
+                "t_rank_ic": [0.8, 0.2],
+                "mean_q5_minus_q1": [0.01, 0.001],
+                "t_q5_minus_q1": [0.4, 0.1],
             }
         )
         out = build_model_comparison(lgbm, deep)
         self.assertEqual(set(out["family"]), {"LightGBM", "Deep Sets"})
-        self.assertEqual(len(out), 2)
+        self.assertEqual(len(out), 3)
+
+    def test_parse_run_ids(self) -> None:
+        self.assertEqual(parse_run_ids("a,b"), ["a", "b"])
+        with self.assertRaises(ValueError):
+            parse_run_ids("")
 
     def test_dashboard_uses_relative_static_figure_paths(self) -> None:
         comparison = pd.DataFrame({"variant": ["all"], "mean_rank_ic": [0.1]})

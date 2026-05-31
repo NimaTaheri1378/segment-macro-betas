@@ -8,6 +8,7 @@ from segment_macro_betas.publication_tables import (
     build_factor_alpha_table,
     build_model_comparison,
     display_frame,
+    parse_run_ids,
     run_publication_tables,
     table_notes,
     validate_publication_tables,
@@ -29,19 +30,25 @@ class PublicationTablesTests(unittest.TestCase):
         )
         sets = pd.DataFrame(
             {
-                "variant": ["set_only"],
-                "architecture": ["deep_sets"],
-                "prediction_rows": [100],
-                "mean_rank_ic": [0.01],
-                "t_rank_ic": [0.8],
-                "mean_q5_minus_q1": [0.001],
-                "t_q5_minus_q1": [0.4],
+                "variant": ["set_only", "set_transformer"],
+                "architecture": [None, "set_transformer"],
+                "prediction_rows": [100, 100],
+                "mean_rank_ic": [0.01, 0.007],
+                "t_rank_ic": [0.8, 1.9],
+                "mean_q5_minus_q1": [0.001, 0.0004],
+                "t_q5_minus_q1": [0.4, 0.3],
             }
         )
         out = build_model_comparison(lgbm, sets)
         self.assertEqual(set(out["model_family"]), {"LightGBM", "Deep Sets"})
         self.assertIn("review_note", out.columns)
         self.assertEqual(out.loc[out["variant"] == "segment_only", "review_note"].iloc[0], "positive rank diagnostic")
+        self.assertEqual(out.loc[out["variant"] == "set_only", "architecture"].iloc[0], "deep_sets")
+
+    def test_parse_run_ids_accepts_comma_separated_values(self) -> None:
+        self.assertEqual(parse_run_ids("set_a,set_b"), ["set_a", "set_b"])
+        with self.assertRaises(ValueError):
+            parse_run_ids(" , ")
 
     def test_factor_table_formats_review_notes(self) -> None:
         factor = pd.DataFrame(
@@ -130,7 +137,7 @@ class PublicationTablesTests(unittest.TestCase):
                 "pub",
                 panel_run_id="panel",
                 lgbm_run_id="lgbm",
-                set_run_id="set",
+                set_run_ids=["set"],
                 factor_run_id="factor",
                 claim_run_id="claim",
                 cost_bps=10,

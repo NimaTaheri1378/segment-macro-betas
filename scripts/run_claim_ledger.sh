@@ -6,6 +6,7 @@ source "$SCRIPT_DIR/_amarel_env.sh"
 PANEL_RUN_ID="${PANEL_RUN_ID:?PANEL_RUN_ID required}"
 LGBM_RUN_ID="${LGBM_RUN_ID:?LGBM_RUN_ID required}"
 SET_RUN_ID="${SET_RUN_ID:?SET_RUN_ID required}"
+SET_RUN_IDS="${SET_RUN_IDS:-$SET_RUN_ID}"
 FACTOR_RUN_ID="${FACTOR_RUN_ID:?FACTOR_RUN_ID required}"
 RUN_ID="${1:-$(date -u +%Y%m%dT%H%M%SZ)}"
 
@@ -21,7 +22,7 @@ export OPENBLAS_NUM_THREADS=1
   echo "claim_ledger_run_id=${RUN_ID}"
   echo "panel_run_id=${PANEL_RUN_ID}"
   echo "lgbm_run_id=${LGBM_RUN_ID}"
-  echo "set_run_id=${SET_RUN_ID}"
+  echo "set_run_ids=${SET_RUN_IDS}"
   echo "factor_run_id=${FACTOR_RUN_ID}"
   echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "hostname=$(hostname)"
@@ -38,7 +39,7 @@ export OPENBLAS_NUM_THREADS=1
     --run-id "$RUN_ID" \
     --panel-run-id "$PANEL_RUN_ID" \
     --lgbm-run-id "$LGBM_RUN_ID" \
-    --set-run-id "$SET_RUN_ID" \
+    --set-run-id "$SET_RUN_IDS" \
     --factor-run-id "$FACTOR_RUN_ID"
 
   echo "finished_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
