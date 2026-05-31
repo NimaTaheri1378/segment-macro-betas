@@ -1,0 +1,21 @@
+project:
+  local_root: "F:/Github/Segment Macro Betas"
+  amarel_root: "/scratch/nt612/Github/Segment Macro Betas"
+  required_slurm_job_id: "5752806"
+
+sample:
+  development_start: "2006-01-01"
+  development_end: "2025-12-31"
+  holdout_start: "2026-01-01"
+  smoke_year: 2019
+  smoke_max_firms: 40
+  smoke_max_segment_rows: 50000
+
+wrds:
+  statement_timeout: "180s"
+  connection_policy: "one connection for schema and smoke checks; shard later pulls by natural date units"
+
+private_paths:
+  raw_data: "data/raw"
+  interim_data: "data/interim"
+  manifests: "runs"

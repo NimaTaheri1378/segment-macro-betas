@@ -1,0 +1,23 @@
+# Local credentials and environment files. Do not commit API keys or tokens.
+.codex/
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+*.key
+*.pem
+
+# Private research data, run logs, and local caches.
+data/
+runs/
+artifacts/private/
+artifacts/raw/
+artifacts/tables/
+artifacts/figures_static/
+artifacts/figures_html/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/

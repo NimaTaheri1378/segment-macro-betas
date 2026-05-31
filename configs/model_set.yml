@@ -1,0 +1,10 @@
+model: segment_set_encoder
+status: scaffold
+input_unit: firm_month_segment_set
+segment_token_fields:
+  - geo_id
+  - revenue_share
+  - macro_state
+  - macro_change
+baseline: deep_sets
+stretch: set_transformer

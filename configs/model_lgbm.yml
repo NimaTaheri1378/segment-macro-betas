@@ -1,0 +1,33 @@
+model: lightgbm_rank_ic
+status: executable_benchmark
+target: next_month_excess_return
+training:
+  validation: expanding_train_yearly_validation
+  primary_metric: monthly_rank_ic
+  secondary_metric: predicted_quintile_q5_minus_q1
+  min_train_months: 36
+  holdout_start: "2026-01-01"
+features:
+  segment:
+    - foreign_share
+    - domestic_share
+    - geo_hhi
+    - geo_count
+    - top_geo_share
+    - log_segment_sales
+  firm:
+    - log_mktcap
+    - log_at
+    - book_to_market
+    - sales_to_assets
+    - profitability
+    - capx_to_assets
+    - rd_to_assets
+    - leverage
+  market:
+    - ret
+    - excess_ret
+    - mktrf
+    - smb
+    - hml
+    - umd

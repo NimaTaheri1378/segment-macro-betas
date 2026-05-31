@@ -1,0 +1,18 @@
+segment_exposures:
+  geography_label_priority: ["gareag", "gareat"]
+  value_priority: ["sales", "revts", "ias"]
+  domestic_label_patterns:
+    - "united states"
+    - "usa"
+    - "u.s."
+    - "us"
+  core_features:
+    - "foreign_share"
+    - "domestic_share"
+    - "geo_hhi"
+    - "geo_count"
+    - "segment_sales_sum"
+
+point_in_time:
+  baseline_activation_rule: "segment source date plus one calendar day for smoke; SEC filing-date activation in full pipeline"
+  no_lookahead_rule: "features dated t may only predict returns after the activation date"

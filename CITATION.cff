@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "If you use this research code, please cite this repository."
+title: "Segment Macro Betas"
+authors:
+  - family-names: "Taheri"
+    given-names: "Nima"
+date-released: 2026-05-30
+version: "0.1.0"

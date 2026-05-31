@@ -1,0 +1,852 @@
+created_utc: "2026-05-30T22:20:00+00:00"
+run_id: 20260530T222000Z
+project_root: /home/nt612/Github/Segment Macro Betas
+roles:
+  historical_segments_geo:
+    description: Compustat Historical Segments geographic labels
+    selected:
+      library: comp_segments_hist_daily
+      table: wrds_seg_geo
+      score: 300
+      base_score: 180
+      column_count: 6
+      required_hits:
+        - gareag
+        - gareat
+        - gvkey
+        - sid
+        - srcdate
+      missing_required_groups:
+        []
+      date_column: srcdate
+      estimated_rows: 877752
+      date_range:
+        min: 1976-06-30
+        max: 2026-03-31
+      columns_sample:
+        - gvkey
+        - stype
+        - sid
+        - gareag
+        - gareat
+        - srcdate
+    alternatives:
+      -
+        library: compseg
+        table: wrds_seg_geo
+        score: 300
+        base_score: 180
+        column_count: 6
+        required_hits:
+          - gareag
+          - gareat
+          - gvkey
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: srcdate
+      -
+        library: comp
+        table: wrds_seg_geo
+        score: 292
+        base_score: 172
+        column_count: 6
+        required_hits:
+          - gareag
+          - gareat
+          - gvkey
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: srcdate
+      -
+        library: comp_na_daily_all
+        table: wrds_seg_geo
+        score: 292
+        base_score: 172
+        column_count: 6
+        required_hits:
+          - gareag
+          - gareat
+          - gvkey
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: srcdate
+      -
+        library: comp_segments_hist_daily
+        table: seg_geo
+        score: 255
+        base_score: 135
+        column_count: 6
+        required_hits:
+          - datadate
+          - gareag
+          - gareat
+          - gvkey
+          - sid
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: compseg
+        table: seg_geo
+        score: 255
+        base_score: 135
+        column_count: 6
+        required_hits:
+          - datadate
+          - gareag
+          - gareat
+          - gvkey
+          - sid
+        missing_required_groups:
+          []
+        date_column: datadate
+    risks:
+      []
+  historical_segments_values:
+    description: Compustat Historical Segments segment values and sales fields
+    selected:
+      library: comp_segments_hist_daily
+      table: wrds_segmerged
+      score: 256
+      base_score: 136
+      column_count: 92
+      required_hits:
+        - datadate
+        - gvkey
+        - ias
+        - revts
+        - sales
+        - sid
+        - srcdate
+      missing_required_groups:
+        []
+      date_column: datadate
+      estimated_rows: 2843285
+      date_range:
+        min: 1976-06-30
+        max: 2026-03-31
+      columns_sample:
+        - gvkey
+        - stype
+        - sid
+        - atlls
+        - atlls_dc
+        - capxs
+        - capxs_dc
+        - capxs_fn
+        - caxts
+        - caxts_dc
+        - cogss
+        - cogss_dc
+        - dps
+        - dps_dc
+        - emps
+        - emps_dc
+        - emps_fn
+        - esubs
+        - esubs_dc
+        - esubs_fn
+        - gdwls
+        - gdwls_dc
+        - ias
+        - ias_dc
+        - ibs
+        - ibs_dc
+        - iints
+        - iints_dc
+        - intseg
+        - intseg_dc
+        - ivaeqs
+        - ivaeqs_dc
+        - nis
+        - nis_dc
+        - nopxs
+        - nopxs_dc
+        - nxints
+        - nxints_dc
+        - obs
+        - obs_dc
+    alternatives:
+      -
+        library: compseg
+        table: wrds_segmerged
+        score: 256
+        base_score: 136
+        column_count: 92
+        required_hits:
+          - datadate
+          - gvkey
+          - ias
+          - revts
+          - sales
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: comp_segments_hist_daily
+        table: seg_annfund
+        score: 255
+        base_score: 135
+        column_count: 79
+        required_hits:
+          - datadate
+          - gvkey
+          - ias
+          - revts
+          - sales
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: compseg
+        table: seg_annfund
+        score: 255
+        base_score: 135
+        column_count: 79
+        required_hits:
+          - datadate
+          - gvkey
+          - ias
+          - revts
+          - sales
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: comp
+        table: wrds_segmerged
+        score: 248
+        base_score: 128
+        column_count: 92
+        required_hits:
+          - datadate
+          - gvkey
+          - ias
+          - revts
+          - sales
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: comp_na_daily_all
+        table: wrds_segmerged
+        score: 248
+        base_score: 128
+        column_count: 92
+        required_hits:
+          - datadate
+          - gvkey
+          - ias
+          - revts
+          - sales
+          - sid
+          - srcdate
+        missing_required_groups:
+          []
+        date_column: datadate
+    risks:
+      []
+  crsp_monthly_stock:
+    description: CRSP monthly stock returns and implementation variables
+    selected:
+      library: crsp
+      table: msf_v2
+      score: 282
+      base_score: 162
+      column_count: 45
+      required_hits:
+        - mthcaldt
+        - mthprc
+        - mthret
+        - permno
+      missing_required_groups:
+        []
+      date_column: mthcaldt
+      estimated_rows: -1
+      date_range:
+        min: 1925-12-31
+        max: 2025-12-31
+      columns_sample:
+        - permno
+        - hdrcusip
+        - permco
+        - siccd
+        - nasdissuno
+        - yyyymm
+        - mthcaldt
+        - mthcompflg
+        - mthcompsubflg
+        - mthprc
+        - mthprcflg
+        - mthprcdt
+        - mthdtflg
+        - mthdelflg
+        - mthcap
+        - mthprevprc
+        - mthprevprcflg
+        - mthprevdt
+        - mthprevdtflg
+        - mthprevcap
+        - mthret
+        - mthretx
+        - mthretflg
+        - mthdiscnt
+        - mthvol
+        - mthvolflg
+        - mthprcvol
+        - mthfacshrflg
+        - mthprcvolmisscnt
+        - cusip
+        - ticker
+        - issuernm
+        - usincflg
+        - issuertype
+        - securitytype
+        - securitysubtype
+        - sharetype
+        - exchangetier
+        - primaryexch
+        - tradingstatusflg
+    alternatives:
+      -
+        library: crsp_a_stock
+        table: msf_v2
+        score: 282
+        base_score: 162
+        column_count: 45
+        required_hits:
+          - mthcaldt
+          - mthprc
+          - mthret
+          - permno
+        missing_required_groups:
+          []
+        date_column: mthcaldt
+      -
+        library: crspsamp
+        table: msf_v2
+        score: 282
+        base_score: 162
+        column_count: 45
+        required_hits:
+          - mthcaldt
+          - mthprc
+          - mthret
+          - permno
+        missing_required_groups:
+          []
+        date_column: mthcaldt
+      -
+        library: crspsamp_all
+        table: msf_v2
+        score: 282
+        base_score: 162
+        column_count: 45
+        required_hits:
+          - mthcaldt
+          - mthprc
+          - mthret
+          - permno
+        missing_required_groups:
+          []
+        date_column: mthcaldt
+      -
+        library: crsp
+        table: msf
+        score: 238
+        base_score: 118
+        column_count: 21
+        required_hits:
+          - date
+          - permno
+          - prc
+          - ret
+        missing_required_groups:
+          []
+        date_column: date
+      -
+        library: crsp_a_stock
+        table: msf
+        score: 238
+        base_score: 118
+        column_count: 21
+        required_hits:
+          - date
+          - permno
+          - prc
+          - ret
+        missing_required_groups:
+          []
+        date_column: date
+    risks:
+      []
+  crsp_daily_stock:
+    description: CRSP daily stock returns for event windows
+    selected:
+      library: crsp
+      table: dsf_v2
+      score: 282
+      base_score: 162
+      column_count: 50
+      required_hits:
+        - dlycaldt
+        - dlyprc
+        - dlyret
+        - permno
+      missing_required_groups:
+        []
+      date_column: dlycaldt
+      estimated_rows: -1
+      date_range:
+        min: 1925-12-31
+        max: 2025-12-31
+      columns_sample:
+        - permno
+        - hdrcusip
+        - permco
+        - siccd
+        - nasdissuno
+        - yyyymmdd
+        - sharetype
+        - securitytype
+        - securitysubtype
+        - usincflg
+        - issuertype
+        - primaryexch
+        - conditionaltype
+        - tradingstatusflg
+        - dlycaldt
+        - dlydelflg
+        - dlyprc
+        - dlyprcflg
+        - dlycap
+        - dlycapflg
+        - dlyprevprc
+        - dlyprevprcflg
+        - dlyprevdt
+        - dlyprevcap
+        - dlyprevcapflg
+        - dlyret
+        - dlyretx
+        - dlyreti
+        - dlyretmissflg
+        - dlyretdurflg
+        - dlyorddivamt
+        - dlynonorddivamt
+        - dlyfacprc
+        - dlydistretflg
+        - dlyvol
+        - dlyclose
+        - dlylow
+        - dlyhigh
+        - dlybid
+        - dlyask
+    alternatives:
+      -
+        library: crsp_a_stock
+        table: dsf_v2
+        score: 282
+        base_score: 162
+        column_count: 50
+        required_hits:
+          - dlycaldt
+          - dlyprc
+          - dlyret
+          - permno
+        missing_required_groups:
+          []
+        date_column: dlycaldt
+      -
+        library: crspsamp
+        table: dsf_v2
+        score: 282
+        base_score: 162
+        column_count: 50
+        required_hits:
+          - dlycaldt
+          - dlyprc
+          - dlyret
+          - permno
+        missing_required_groups:
+          []
+        date_column: dlycaldt
+      -
+        library: crspsamp_all
+        table: dsf_v2
+        score: 282
+        base_score: 162
+        column_count: 50
+        required_hits:
+          - dlycaldt
+          - dlyprc
+          - dlyret
+          - permno
+        missing_required_groups:
+          []
+        date_column: dlycaldt
+      -
+        library: crsp
+        table: dsf
+        score: 238
+        base_score: 118
+        column_count: 20
+        required_hits:
+          - date
+          - permno
+          - prc
+          - ret
+        missing_required_groups:
+          []
+        date_column: date
+      -
+        library: crsp_a_stock
+        table: dsf
+        score: 238
+        base_score: 118
+        column_count: 20
+        required_hits:
+          - date
+          - permno
+          - prc
+          - ret
+        missing_required_groups:
+          []
+        date_column: date
+    risks:
+      []
+  ccm_link_history:
+    description: CRSP/Compustat Merged link history
+    selected:
+      library: crsp_a_ccm
+      table: ccmxpf_linktable
+      score: 256
+      base_score: 136
+      column_count: 9
+      required_hits:
+        - gvkey
+        - linkdt
+        - linkenddt
+        - lpermno
+      missing_required_groups:
+        []
+      date_column: linkdt
+      estimated_rows: 92711
+      date_range:
+        min: 1946-01-01
+        max: 2025-12-31
+      columns_sample:
+        - gvkey
+        - linkprim
+        - liid
+        - linktype
+        - lpermno
+        - lpermco
+        - usedflag
+        - linkdt
+        - linkenddt
+    alternatives:
+      -
+        library: crsp
+        table: ccmxpf_linktable
+        score: 248
+        base_score: 128
+        column_count: 9
+        required_hits:
+          - gvkey
+          - linkdt
+          - linkenddt
+          - lpermno
+        missing_required_groups:
+          []
+        date_column: linkdt
+      -
+        library: crsp_a_ccm
+        table: ccmxpf_lnkhist
+        score: 245
+        base_score: 125
+        column_count: 8
+        required_hits:
+          - gvkey
+          - linkdt
+          - linkenddt
+          - lpermno
+        missing_required_groups:
+          []
+        date_column: linkdt
+      -
+        library: crsp_a_ccm
+        table: ccm_lookup
+        score: 244
+        base_score: 124
+        column_count: 15
+        required_hits:
+          - gvkey
+          - linkdt
+          - linkenddt
+          - lpermno
+        missing_required_groups:
+          []
+        date_column: linkdt
+      -
+        library: crsp
+        table: ccmxpf_lnkhist
+        score: 237
+        base_score: 117
+        column_count: 8
+        required_hits:
+          - gvkey
+          - linkdt
+          - linkenddt
+          - lpermno
+        missing_required_groups:
+          []
+        date_column: linkdt
+      -
+        library: crspsamp
+        table: ccmxpf_lnkhist
+        score: 237
+        base_score: 117
+        column_count: 8
+        required_hits:
+          - gvkey
+          - linkdt
+          - linkenddt
+          - lpermno
+        missing_required_groups:
+          []
+        date_column: linkdt
+    risks:
+      []
+  compustat_fundamentals_annual:
+    description: Compustat North America annual fundamentals
+    selected:
+      library: comp
+      table: funda
+      score: 208
+      base_score: 118
+      column_count: 949
+      required_hits:
+        - at
+        - datadate
+        - gvkey
+        - revt
+        - sale
+      missing_required_groups:
+        []
+      date_column: datadate
+      estimated_rows: -1
+      date_range:
+        min: 1950-06-30
+        max: 2026-05-31
+      columns_sample:
+        - gvkey
+        - datadate
+        - fyear
+        - indfmt
+        - consol
+        - popsrc
+        - datafmt
+        - tic
+        - cusip
+        - conm
+        - acctchg
+        - acctstd
+        - acqmeth
+        - adrr
+        - ajex
+        - ajp
+        - bspr
+        - compst
+        - curcd
+        - curncd
+        - currtr
+        - curuscn
+        - final
+        - fyr
+        - ismod
+        - ltcm
+        - ogm
+        - pddur
+        - scf
+        - src
+        - stalt
+        - udpl
+        - upd
+        - apdedate
+        - fdate
+        - pdate
+        - acchg
+        - acco
+        - accrt
+        - acdo
+    alternatives:
+      -
+        library: comp_na_daily_all
+        table: funda
+        score: 208
+        base_score: 118
+        column_count: 949
+        required_hits:
+          - at
+          - datadate
+          - gvkey
+          - revt
+          - sale
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: compsamp
+        table: funda
+        score: 208
+        base_score: 118
+        column_count: 948
+        required_hits:
+          - at
+          - datadate
+          - gvkey
+          - revt
+          - sale
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: compsamp_all
+        table: funda
+        score: 208
+        base_score: 118
+        column_count: 948
+        required_hits:
+          - at
+          - datadate
+          - gvkey
+          - revt
+          - sale
+        missing_required_groups:
+          []
+        date_column: datadate
+      -
+        library: comp
+        table: fundq
+        score: 167
+        base_score: 107
+        column_count: 648
+        required_hits:
+          - datadate
+          - gvkey
+        missing_required_groups:
+          - ["at", "sale", "revt"]
+        date_column: datadate
+      -
+        library: comp_na_daily_all
+        table: fundq
+        score: 167
+        base_score: 107
+        column_count: 648
+        required_hits:
+          - datadate
+          - gvkey
+        missing_required_groups:
+          - ["at", "sale", "revt"]
+        date_column: datadate
+    risks:
+      []
+  benchmark_factors_wrds:
+    description: "WRDS-hosted factor or Fama/French support tables, if visible"
+    selected:
+      library: ff
+      table: factors_monthly
+      score: 148
+      base_score: 118
+      column_count: 9
+      required_hits:
+        - date
+      missing_required_groups:
+        []
+      date_column: date
+      estimated_rows: -1
+      date_range:
+        min: 1926-07-01
+        max: 2026-03-01
+      columns_sample:
+        - date
+        - mktrf
+        - smb
+        - hml
+        - rf
+        - year
+        - month
+        - umd
+        - dateff
+    alternatives:
+      -
+        library: ff_all
+        table: factors_monthly
+        score: 148
+        base_score: 118
+        column_count: 9
+        required_hits:
+          - date
+        missing_required_groups:
+          []
+        date_column: date
+      -
+        library: ff
+        table: fivefactors_monthly
+        score: 93
+        base_score: 63
+        column_count: 11
+        required_hits:
+          - date
+        missing_required_groups:
+          []
+        date_column: date
+      -
+        library: ff_all
+        table: fivefactors_monthly
+        score: 93
+        base_score: 63
+        column_count: 11
+        required_hits:
+          - date
+        missing_required_groups:
+          []
+        date_column: date
+      -
+        library: contrib_global_factor
+        table: ctff_daily_ret
+        score: 48
+        base_score: 18
+        column_count: 3
+        required_hits:
+          - date
+        missing_required_groups:
+          []
+        date_column: date
+      -
+        library: contrib_global_factor
+        table: global_factor
+        score: 48
+        base_score: 18
+        column_count: 444
+        required_hits:
+          - date
+        missing_required_groups:
+          []
+        date_column: date
+    risks:
+      - WRDS-hosted factor tables are optional; Kenneth French public files remain acceptable.
