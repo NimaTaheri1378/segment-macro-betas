@@ -18,6 +18,8 @@ release checks are treated as evidence only for the scope they actually cover.
 | Segment-set model extension is implemented | `src/segment_macro_betas/segment_set_model.py`; full Deep Sets run `20260531T010832Z_set`; full CUDA Set Transformer run `20260531T_set_transformer_full`. |
 | Official non-FRED macro API execution is implemented and executed | `src/segment_macro_betas/macro_engine.py`; private BLS/BEA/EIA run `20260531T_macro_nonfred_full` with 2,480 rows and `lookahead_safe=true`. |
 | Firm-geography-macro tensor is implemented and executed | `src/segment_macro_betas/macro_tensor.py`; private tensor run `20260531T_macro_tensor_nonfred_v2` with 936,897 panel rows, 2,811,167 joined token rows, 9 macro features, and 100% macro coverage. |
+| Full configured-lag FRED/BLS/BEA/EIA macro catalog is executed | Private full-catalog run `20260531T_macro_full_catalog_delayed` with 8,658 rows, 8 series, 4 sources, `lookahead_safe=true`, and no API errors. |
+| Full-catalog macro tensor and diagnostics are executed | Private tensor `20260531T_macro_tensor_full_catalog`, LightGBM run `20260531T_lgbm_full_catalog`, factor robustness `20260531T_factor_robustness_full_catalog`, claim ledger `20260531T_claim_ledger_full_catalog_v2`, publication tables `20260531T_publication_tables_full_catalog_v2`, and visual pack `20260531T_visual_pack_full_catalog_v2`. |
 | Limited revision-safe FRED macro chain is executed | Private FRED initial-release run `20260531T_fred_initial_release_guarded`, tensor run `20260531T_macro_tensor_fred_initial_release`, and model run `20260531T_lgbm_fred_initial_release`; the tensor reports `vintage_safe=true`. |
 | Factor-alpha and turnover robustness code is implemented | `src/segment_macro_betas/factor_robustness.py`; macro-aware private diagnostic run `20260531T_factor_robustness_macro_nonfred`. |
 | Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and macro-aware private claim-ledger run `20260531T_claim_ledger_macro_nonfred`. |
@@ -26,19 +28,18 @@ release checks are treated as evidence only for the scope they actually cover.
 | 2026 holdout protocol is frozen without opening holdout data | `scripts/freeze_holdout_protocol.py`; private holdout freeze run `20260531T_holdout_protocol_freeze` selects `lgbm:all_plus_macro` from development diagnostics and records `holdout_opened=false`. |
 | Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; private-state audit `20260531T_private_state_audit` has zero failures; no configured remote; no push. |
 
-## Code-Complete But Data-Gated
+## Guarded Scope
 
-| Requirement | Current State | Gate |
+| Item | Current State | Guardrail |
 |---|---|---|
-| Full FRED-inclusive macro catalog | Execute mode started the full catalog in `20260531T_macro_full_catalog_guarded_smoke`, completed two FRED series, and then stopped safely on HTTP `429` for `UNRATE`. | Wait before retrying; do not spam the FRED API. |
-| Broader revision-safe macro interactions | The limited FRED initial-release chain is revision-safe for included FRED series; the non-FRED macro tensor is no-lookahead but `revision_safe=false`. | Requires true realtime/vintage coverage for any additional macro sources before broader revision-safe claims. |
+| Broader revision-safe macro interactions | The limited FRED initial-release chain is revision-safe for included FRED series; the full configured-lag macro tensor is no-lookahead but not true historical-vintage evidence. | Keep revision-safe wording limited to the included FRED initial-release series unless additional realtime/vintage sources are added. |
 
 ## Not Yet Final-Claim Ready
 
 | Item | Reason |
 |---|---|
 | 2026 held-out evaluation | The model/protocol freeze is recorded, but `holdout_opened=false`; no 2026 performance has been evaluated. |
-| Final transaction-cost and alpha claims | Macro-aware publication-style diagnostic tables now exist, but final claims still require revision-safe macro evidence, future holdout-result review, and author sign-off on manuscript wording. |
+| Final transaction-cost and alpha claims | Macro-aware publication-style diagnostic tables now exist, but final claims still require future holdout-result review and author sign-off on manuscript wording. |
 | Final paper claims | Current numbers are diagnostics with guardrails; model-card and docs avoid final asset-pricing claims. |
 
 ## Latest Verification
@@ -66,5 +67,5 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 
 The current release state is suitable for a public-safe code push only after
 the user explicitly authorizes creating/configuring the GitHub remote and
-pushing. It is not a final empirical paper package until the broader full FRED
-catalog and future authorized 2026 holdout evaluation are resolved.
+pushing. It is not a final empirical paper package until future authorized
+2026 holdout evaluation is resolved.

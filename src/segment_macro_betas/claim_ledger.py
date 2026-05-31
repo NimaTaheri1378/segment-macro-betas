@@ -108,6 +108,16 @@ def macro_execution_claim(lgbm_run_id: str) -> dict[str, str]:
             "The non-FRED macro interactions are final revision-safe vintage interactions.",
             "Use true realtime or vintage macro sources before making final revision-safe macro-beta claims.",
         )
+    if "full_catalog" in lgbm_run_id:
+        return claim_row(
+            "Macro execution",
+            "The full configured-lag FRED/BLS/BEA/EIA macro catalog is live with no-lookahead timing.",
+            "passed diagnostic",
+            f"{lgbm_run_id}:lgbm_summary.csv; paired full-catalog macro_engine and macro_tensor manifests",
+            "The full official macro catalog has been pulled and joined with configured no-lookahead availability dates.",
+            "The full catalog is true historical-vintage or fully revision-safe macro evidence.",
+            "Use the FRED initial-release chain for limited revision-safe wording; treat the full catalog as no-lookahead diagnostics.",
+        )
     return claim_row(
         "Macro execution",
         "Official macro API and true vintage macro-tensor claims remain gated.",

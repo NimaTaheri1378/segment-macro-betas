@@ -20,7 +20,14 @@ EXPECTED_RUNS = {
     "factor_fred_initial": ("20260531T_factor_robustness_fred_initial_release", "factor_robustness"),
     "claim_ledger_fred_initial": ("20260531T_claim_ledger_fred_initial_release_v2", "claim_ledger"),
     "publication_tables_fred_initial": ("20260531T_publication_tables_fred_initial_release_v2", "publication_tables"),
-    "visual_pack_fred_initial": ("20260531T_visual_pack_fred_initial_release_v2", "visual_pack"),
+    "visual_pack_fred_initial": ("20260531T_visual_pack_fred_initial_release_v3", "visual_pack"),
+    "macro_full_catalog": ("20260531T_macro_full_catalog_delayed", "macro_engine"),
+    "macro_tensor_full_catalog": ("20260531T_macro_tensor_full_catalog", "macro_tensor"),
+    "lgbm_full_catalog": ("20260531T_lgbm_full_catalog", "lgbm_benchmark"),
+    "factor_full_catalog": ("20260531T_factor_robustness_full_catalog", "factor_robustness"),
+    "claim_ledger_full_catalog": ("20260531T_claim_ledger_full_catalog_v2", "claim_ledger"),
+    "publication_tables_full_catalog": ("20260531T_publication_tables_full_catalog_v2", "publication_tables"),
+    "visual_pack_full_catalog": ("20260531T_visual_pack_full_catalog_v2", "visual_pack"),
     "lgbm_macro": ("20260531T_lgbm_macro_nonfred_v3", "lgbm_benchmark"),
     "deepsets": ("20260531T010832Z_set", "segment_set_model"),
     "set_transformer": ("20260531T_set_transformer_full", "segment_set_model"),
@@ -29,7 +36,6 @@ EXPECTED_RUNS = {
     "publication_tables": ("20260531T_publication_tables_macro_nonfred", "publication_tables"),
     "visual_pack": ("20260531T_visual_pack_macro_nonfred_v2", "visual_pack"),
     "holdout_protocol": ("20260531T_holdout_protocol_freeze", "holdout_protocol"),
-    "fred_guard": ("20260531T_macro_full_catalog_guarded_smoke", "macro_engine"),
 }
 
 
@@ -136,6 +142,19 @@ def audit(root: Path) -> dict[str, Any]:
     if tensor_macro.get("revision_safe") is not True:
         require(rows, "macro_tensor", "revision_safe_covered", fred_ready, "covered by FRED initial-release tensor" if fred_ready else "no true revision-safe macro tensor")
 
+    full_macro = manifests.get("macro_full_catalog", {})
+    require(rows, "macro_full_catalog", "status_ok", full_macro.get("status") == "ok", f"status={full_macro.get('status')}")
+    require(rows, "macro_full_catalog", "series_count", nested(full_macro, "checks", "series_count", default=0) >= 8, f"checks={full_macro.get('checks')}")
+    require(rows, "macro_full_catalog", "source_count", nested(full_macro, "checks", "source_count", default=0) >= 4, f"checks={full_macro.get('checks')}")
+    require(rows, "macro_full_catalog", "lookahead_safe", nested(full_macro, "checks", "lookahead_safe") is True, f"checks={full_macro.get('checks')}")
+
+    full_tensor = manifests.get("macro_tensor_full_catalog", {})
+    full_tensor_macro = nested(full_tensor, "checks", "macro", default={})
+    require(rows, "macro_tensor_full_catalog", "status_ok", full_tensor.get("status") == "ok", f"status={full_tensor.get('status')}")
+    require(rows, "macro_tensor_full_catalog", "coverage", nested(full_tensor, "checks", "aggregation", "macro_coverage_rate", default=0) >= 0.999, f"coverage={nested(full_tensor, 'checks', 'aggregation', 'macro_coverage_rate')}")
+    require(rows, "macro_tensor_full_catalog", "feature_count", nested(full_tensor, "checks", "aggregation", "macro_feature_count", default=0) >= 24, f"features={nested(full_tensor, 'checks', 'aggregation', 'macro_feature_count')}")
+    require(rows, "macro_tensor_full_catalog", "availability", full_tensor_macro.get("availability_source") == "available_date", f"macro={full_tensor_macro}")
+
     lgbm = manifests.get("lgbm_macro", {})
     require(rows, "lgbm_macro", "status_ok", lgbm.get("status") == "ok", f"status={lgbm.get('status')}")
     require(rows, "lgbm_macro", "variants", nested(lgbm, "checks", "variants_ok", default=0) >= 4, f"checks={lgbm.get('checks')}")
@@ -147,6 +166,12 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "lgbm_fred_initial", "variants", nested(fred_lgbm, "checks", "variants_ok", default=0) >= 4, f"checks={fred_lgbm.get('checks')}")
     require(rows, "lgbm_fred_initial", "macro_only_diagnostic", nested(fred_lgbm, "checks", "variants_diagnostic_only") == 1, f"checks={fred_lgbm.get('checks')}")
     require(rows, "lgbm_fred_initial", "best_spread_macro", nested(fred_lgbm, "checks", "best_spread_variant") == "all_plus_macro", f"checks={fred_lgbm.get('checks')}")
+
+    full_lgbm = manifests.get("lgbm_full_catalog", {})
+    require(rows, "lgbm_full_catalog", "status_ok", full_lgbm.get("status") == "ok", f"status={full_lgbm.get('status')}")
+    require(rows, "lgbm_full_catalog", "variants", nested(full_lgbm, "checks", "variants_ok", default=0) >= 4, f"checks={full_lgbm.get('checks')}")
+    require(rows, "lgbm_full_catalog", "macro_only_diagnostic", nested(full_lgbm, "checks", "variants_diagnostic_only") == 1, f"checks={full_lgbm.get('checks')}")
+    require(rows, "lgbm_full_catalog", "best_spread_macro", nested(full_lgbm, "checks", "best_spread_variant") == "all_plus_macro", f"checks={full_lgbm.get('checks')}")
 
     for key in ["deepsets", "set_transformer"]:
         model = manifests.get(key, {})
@@ -163,6 +188,11 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "factor_fred_initial", "variants", nested(fred_factor, "checks", "variants", default=0) >= 7, f"checks={fred_factor.get('checks')}")
     require(rows, "factor_fred_initial", "factor_months", nested(fred_factor, "checks", "factor_months", default=0) >= 200, f"checks={fred_factor.get('checks')}")
 
+    full_factor = manifests.get("factor_full_catalog", {})
+    require(rows, "factor_full_catalog", "status_ok", full_factor.get("status") == "ok", f"status={full_factor.get('status')}")
+    require(rows, "factor_full_catalog", "variants", nested(full_factor, "checks", "variants", default=0) >= 7, f"checks={full_factor.get('checks')}")
+    require(rows, "factor_full_catalog", "factor_months", nested(full_factor, "checks", "factor_months", default=0) >= 200, f"checks={full_factor.get('checks')}")
+
     claim = manifests.get("claim_ledger", {})
     require(rows, "claim_ledger", "status_ok", claim.get("status") == "ok", f"status={claim.get('status')}")
     require(rows, "claim_ledger", "no_validation_failures", nested(claim, "checks", "validation_failures") == 0, f"checks={claim.get('checks')}")
@@ -170,7 +200,11 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "claim_ledger_fred_initial", "status_ok", fred_claim.get("status") == "ok", f"status={fred_claim.get('status')}")
     require(rows, "claim_ledger_fred_initial", "no_validation_failures", nested(fred_claim, "checks", "validation_failures") == 0, f"checks={fred_claim.get('checks')}")
     require(rows, "claim_ledger_fred_initial", "no_blocked_claims", nested(fred_claim, "checks", "blocked_claims") == 0, f"checks={fred_claim.get('checks')}")
-    if nested(claim, "checks", "blocked_claims", default=0) > 0 and nested(fred_claim, "checks", "blocked_claims") != 0:
+    full_claim = manifests.get("claim_ledger_full_catalog", {})
+    require(rows, "claim_ledger_full_catalog", "status_ok", full_claim.get("status") == "ok", f"status={full_claim.get('status')}")
+    require(rows, "claim_ledger_full_catalog", "no_validation_failures", nested(full_claim, "checks", "validation_failures") == 0, f"checks={full_claim.get('checks')}")
+    require(rows, "claim_ledger_full_catalog", "no_blocked_claims", nested(full_claim, "checks", "blocked_claims") == 0, f"checks={full_claim.get('checks')}")
+    if nested(claim, "checks", "blocked_claims", default=0) > 0 and nested(fred_claim, "checks", "blocked_claims") != 0 and nested(full_claim, "checks", "blocked_claims") != 0:
         add(rows, "claim_ledger", "blocked_claims", "blocked", f"blocked_claims={nested(claim, 'checks', 'blocked_claims')}")
 
     pub = manifests.get("publication_tables", {})
@@ -183,6 +217,11 @@ def audit(root: Path) -> dict[str, Any]:
     require(rows, "publication_tables_fred_initial", "review_clean", nested(fred_pub, "checks", "review_failures") == 0, f"checks={fred_pub.get('checks')}")
     require(rows, "publication_tables_fred_initial", "claim_validation_clean", nested(fred_pub, "checks", "claim_validation_failures") == 0, f"checks={fred_pub.get('checks')}")
 
+    full_pub = manifests.get("publication_tables_full_catalog", {})
+    require(rows, "publication_tables_full_catalog", "status_ok", full_pub.get("status") == "ok", f"status={full_pub.get('status')}")
+    require(rows, "publication_tables_full_catalog", "review_clean", nested(full_pub, "checks", "review_failures") == 0, f"checks={full_pub.get('checks')}")
+    require(rows, "publication_tables_full_catalog", "claim_validation_clean", nested(full_pub, "checks", "claim_validation_failures") == 0, f"checks={full_pub.get('checks')}")
+
     visual = manifests.get("visual_pack", {})
     require(rows, "visual_pack", "status_ok", visual.get("status") == "ok", f"status={visual.get('status')}")
     require(rows, "visual_pack", "figures", nested(visual, "checks", "figure_count", default=0) >= 7, f"checks={visual.get('checks')}")
@@ -190,18 +229,15 @@ def audit(root: Path) -> dict[str, Any]:
     fred_visual = manifests.get("visual_pack_fred_initial", {})
     require(rows, "visual_pack_fred_initial", "status_ok", fred_visual.get("status") == "ok", f"status={fred_visual.get('status')}")
     require(rows, "visual_pack_fred_initial", "figures", nested(fred_visual, "checks", "figure_count", default=0) >= 7, f"checks={fred_visual.get('checks')}")
+    full_visual = manifests.get("visual_pack_full_catalog", {})
+    require(rows, "visual_pack_full_catalog", "status_ok", full_visual.get("status") == "ok", f"status={full_visual.get('status')}")
+    require(rows, "visual_pack_full_catalog", "figures", nested(full_visual, "checks", "figure_count", default=0) >= 7, f"checks={full_visual.get('checks')}")
 
     holdout = manifests.get("holdout_protocol", {})
     require(rows, "holdout_protocol", "status_frozen", holdout.get("status") == "frozen", f"status={holdout.get('status')}")
     require(rows, "holdout_protocol", "holdout_unopened", holdout.get("holdout_opened") is False, f"holdout_opened={holdout.get('holdout_opened')}")
     require(rows, "holdout_protocol", "selected_model", nested(holdout, "selected_model", "variant") == "all_plus_macro", f"selected_model={holdout.get('selected_model')}")
     require(rows, "holdout_protocol", "no_freeze_failures", nested(holdout, "checks", "failed") == 0, f"checks={holdout.get('checks')}")
-
-    fred = manifests.get("fred_guard", {})
-    errors = fred.get("api_errors", [])
-    fred_429 = bool(errors and errors[0].get("http_status") == 429)
-    require(rows, "fred_guard", "guarded_api_error", fred.get("status") == "api_error" and fred_429, f"status={fred.get('status')} errors={errors[:1]}")
-    add(rows, "fred_guard", "full_fred_catalog", "blocked", "full FRED-inclusive catalog is rate-limited; do not retry aggressively")
 
     failures = [row for row in rows if row["status"] == "fail"]
     blockers = [row for row in rows if row["status"] == "blocked"]

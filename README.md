@@ -12,7 +12,7 @@ Current implementation status:
 - Smoke-panel pipeline implemented for a tiny private WRDS sample.
 - Full annual WRDS shard extraction, monthly panel construction, first-pass
   baselines, and an expanding-window LightGBM benchmark are implemented.
-- Official non-FRED macro extraction, macro tensor construction, and
+- Official FRED/BLS/BEA/EIA macro extraction, macro tensor construction, and
   macro-aware LightGBM diagnostics are implemented for private runs.
 - Public repository files are code, configs, docs, and tests only.
 - Private data, credentials, and run logs are intentionally excluded from

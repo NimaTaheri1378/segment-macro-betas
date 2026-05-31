@@ -328,12 +328,17 @@ def macro_guardrail_for_run(lgbm_run_id: str) -> str:
     if "fred_initial_release" in lgbm_run_id:
         return (
             "- Limited FRED initial-release diagnostics are live and revision-safe for the included FRED series; "
-            "the broader full FRED/BLS/BEA/EIA catalog remains incomplete."
+            "the broader full FRED/BLS/BEA/EIA catalog is tracked separately as configured no-lookahead diagnostics."
         )
     if "macro_nonfred" in lgbm_run_id:
         return (
             "- Official non-FRED macro diagnostics are live with no-lookahead timing; "
             "revision-safe macro claims remain blocked until true vintage sources are used."
+        )
+    if "full_catalog" in lgbm_run_id:
+        return (
+            "- The full FRED/BLS/BEA/EIA macro catalog is live with configured no-lookahead timing; "
+            "revision-safe wording should remain limited to the separate FRED initial-release chain."
         )
     return "- Macro diagnostics should remain tied to the specific private manifest used for this model card."
 

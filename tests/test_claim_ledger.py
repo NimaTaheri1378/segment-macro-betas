@@ -76,9 +76,12 @@ class ClaimLedgerTests(unittest.TestCase):
     def test_macro_execution_claim_distinguishes_fred_initial_release(self) -> None:
         fred = macro_execution_claim("20260531T_lgbm_fred_initial_release")
         nonfred = macro_execution_claim("20260531T_lgbm_macro_nonfred_v3")
+        full = macro_execution_claim("20260531T_lgbm_full_catalog")
         self.assertEqual(fred["evidence_strength"], "passed diagnostic")
         self.assertIn("revision-safe for the included FRED series", fred["allowed_wording"])
         self.assertIn("blocked", nonfred["evidence_strength"])
+        self.assertEqual(full["evidence_strength"], "passed diagnostic")
+        self.assertIn("no-lookahead", full["allowed_wording"])
 
     def test_parse_run_ids(self) -> None:
         self.assertEqual(parse_run_ids("set_a,set_b"), ["set_a", "set_b"])

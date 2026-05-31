@@ -15,6 +15,8 @@ Allowed current wording:
   robustness run.
 - Official non-FRED macro data from BLS, BEA, and EIA have been pulled into a
   no-lookahead macro tensor for the 2006-2025 development sample.
+- The full configured-lag FRED/BLS/BEA/EIA macro catalog has been pulled and
+  joined with no-lookahead availability dates.
 - The macro-aware `all_plus_macro` LightGBM diagnostic has the strongest
   current long-short spread and factor-alpha diagnostics in the development
   sample.
@@ -35,8 +37,7 @@ Forbidden current wording:
 - Segment disclosures prove investor underreaction.
 - The strategy is tradable, capacity-safe, arbitrage-like, or fully orthogonal
   to standard factors.
-- The full FRED-inclusive macro catalog is complete while the FRED API remains
-  rate-limited.
+- The full configured-lag macro catalog is true historical-vintage evidence.
 - All macro interactions are final revision-safe evidence when only the limited
   FRED initial-release subset has been executed.
 - 2026 holdout performance is known before the holdout protocol is explicitly

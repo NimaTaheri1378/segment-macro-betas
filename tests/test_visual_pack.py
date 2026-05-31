@@ -54,8 +54,10 @@ class VisualPackTests(unittest.TestCase):
     def test_macro_guardrail_distinguishes_fred_initial_release(self) -> None:
         fred = macro_guardrail_for_run("20260531T_lgbm_fred_initial_release")
         nonfred = macro_guardrail_for_run("20260531T_lgbm_macro_nonfred_v3")
+        full = macro_guardrail_for_run("20260531T_lgbm_full_catalog")
         self.assertIn("revision-safe for the included FRED series", fred)
         self.assertIn("revision-safe macro claims remain blocked", nonfred)
+        self.assertIn("full FRED/BLS/BEA/EIA macro catalog is live", full)
 
     def test_dashboard_uses_relative_static_figure_paths(self) -> None:
         comparison = pd.DataFrame({"variant": ["all"], "mean_rank_ic": [0.1]})

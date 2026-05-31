@@ -76,8 +76,9 @@ requests. `fred_initial_release` requests initial-release observations, while
 Those rows use the FRED `realtime_start` field as their availability date, so
 the macro tensor can join the latest macro value actually known by each
 firm-month. A private FRED initial-release run has executed for a limited
-two-series catalog; broader full-catalog FRED/BLS/BEA/EIA execution remains a
-separate gate.
+two-series catalog. A broader private FRED/BLS/BEA/EIA configured-lag catalog
+has also executed; it is treated as no-lookahead, not as true historical
+vintage evidence.
 
 The visual pack is generated from private manifests and ignored artifacts. It
 collects sample coverage, filing-date activation coverage, exposure
