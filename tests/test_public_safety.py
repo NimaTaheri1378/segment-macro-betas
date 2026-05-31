@@ -8,7 +8,7 @@ class PublicSafetyTests(unittest.TestCase):
 
     def test_gitignore_protects_private_paths(self) -> None:
         text = Path(".gitignore").read_text(encoding="utf-8")
-        for pattern in [".codex/", ".env", "data/", "runs/", "artifacts/private/", "artifacts/tables/"]:
+        for pattern in [".codex/", ".env", "data/", "runs/", "artifacts/private/", "artifacts/tables/", "*.egg-info/"]:
             self.assertIn(pattern, text)
 
     def test_env_example_has_no_values(self) -> None:

@@ -1,15 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_ROOT="/scratch/nt612/Github/Segment Macro Betas"
-EXPECTED_JOB_ID="5752806"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/_amarel_env.sh"
 RAW_RUN_ID="${RAW_RUN_ID:?RAW_RUN_ID required}"
 PANEL_RUN_ID="${PANEL_RUN_ID:?PANEL_RUN_ID required}"
 BASELINE_RUN_ID="${BASELINE_RUN_ID:?BASELINE_RUN_ID required}"
 LGBM_RUN_ID="${LGBM_RUN_ID:?LGBM_RUN_ID required}"
 SET_RUN_ID="${SET_RUN_ID:?SET_RUN_ID required}"
 RUN_ID="${1:-$(date -u +%Y%m%dT%H%M%SZ)}"
-PYTHON_BIN="${PYTHON_BIN:-$HOME/.conda/envs/ml_core/bin/python}"
 
 cd "$PROJECT_ROOT"
 mkdir -p "runs/${RUN_ID}/logs" "runs/${RUN_ID}/manifests" "runs/${RUN_ID}/reports"

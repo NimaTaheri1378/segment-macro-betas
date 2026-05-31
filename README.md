@@ -20,66 +20,75 @@ Run public-safe checks locally:
 
 ```bash
 python scripts/public_safety_scan.py
+python scripts/release_audit.py
 python -m unittest discover -s tests
+```
+
+On Amarel, set the approved project root and allocation id in your shell before
+calling any runner:
+
+```bash
+export SMB_PROJECT_ROOT="/path/to/Segment Macro Betas"
+export SMB_SLURM_JOB_ID="<approved-allocation-id>"
 ```
 
 Run the WRDS smoke panel on Amarel only inside the approved Slurm allocation:
 
 ```bash
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_smoke_panel.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_smoke_panel.sh
 ```
 
 Plan or execute the sharded full extraction:
 
 ```bash
 # Dry-run query contracts only
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_full_extract.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_full_extract.sh
 
 # Full annual shards, launched only after review
 EXECUTE=1 YEARS=2006-2025 INCLUDE_DAILY=0 \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_full_extract.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_full_extract.sh
 ```
 
 Plan or execute the macro engine:
 
 ```bash
-EXECUTE=0 srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_macro_engine.sh
+EXECUTE=0 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_macro_engine.sh
 ```
 
 Build the monthly modeling panel from a completed raw run:
 
 ```bash
 RAW_RUN_ID=20260530T233446Z \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_build_panel.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_build_panel.sh
 ```
 
 Add the targeted Compustat filing-date supplement before rebuilding the panel:
 
 ```bash
 RAW_RUN_ID=20260530T233446Z EXECUTE=1 \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_filing_dates_extract.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_filing_dates_extract.sh
 ```
 
 Run first-pass portfolio and cross-sectional baselines:
 
 ```bash
 PANEL_RUN_ID=20260531T003936Z_panel_filing \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=1 scripts/run_baselines.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_baselines.sh
 ```
 
 Run the LightGBM expanding-window benchmark:
 
 ```bash
 PANEL_RUN_ID=20260531T003936Z_panel_filing \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=8 scripts/run_lgbm_benchmark.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=8 bash scripts/run_lgbm_benchmark.sh
 ```
 
 By default this runner executes feature ablations: `all`,
@@ -91,8 +100,8 @@ Run the Deep Sets segment-set extension:
 
 ```bash
 RAW_RUN_ID=20260530T233446Z PANEL_RUN_ID=20260531T003936Z_panel_filing \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=8 scripts/run_segment_set_model.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=8 bash scripts/run_segment_set_model.sh
 ```
 
 Generate the private visual pack and model card:
@@ -103,6 +112,6 @@ PANEL_RUN_ID=20260531T003936Z_panel_filing \
 BASELINE_RUN_ID=20260531T004841Z_baseline_filing \
 LGBM_RUN_ID=20260531T005001Z_lgbm_filing \
 SET_RUN_ID=20260531T010832Z_set \
-srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
-  --ntasks=1 --cpus-per-task=4 scripts/run_visual_pack.sh
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=4 bash scripts/run_visual_pack.sh
 ```

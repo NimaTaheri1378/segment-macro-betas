@@ -11,7 +11,18 @@ SECRET_PATTERNS = [
     re.compile(r"@gmail\.com", re.IGNORECASE),
 ]
 
-SKIP_DIRS = {".codex", ".git", "runs", "data", "artifacts", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+SKIP_DIRS = {
+    ".codex",
+    ".git",
+    "runs",
+    "data",
+    "artifacts",
+    "__pycache__",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+}
+SKIP_SUFFIXES = (".egg-info",)
 
 
 def iter_public_files(root: Path):
@@ -19,6 +30,8 @@ def iter_public_files(root: Path):
         if not path.is_file():
             continue
         if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        if any(part.endswith(SKIP_SUFFIXES) for part in path.parts):
             continue
         yield path
 

@@ -15,6 +15,7 @@ Implemented stages:
   `20260531T010832Z_set`.
 - Visual pack and model-card generator, with private visual pack run
   `20260531T_visual_pack`.
+- Public-safe release audit script and release notes.
 - Smoke and baseline figures generated from private artifacts.
 
 Latest private LightGBM ablation diagnostic:
@@ -52,6 +53,18 @@ Latest private visual pack:
 - Dashboard: ignored private HTML artifact under `artifacts/figures_html/`.
 - Model card: ignored private report under `runs/`.
 
+Latest public release-prep check:
+
+- Hard-coded private Amarel path and allocation id removed from public runner
+  scripts and docs.
+- Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
+- Local checks passed: release audit, public safety scan, and 32 unit tests.
+- Allocation-backed checks passed on the active compute environment: release
+  audit, public safety scan, and 32 unit tests.
+- Macro-engine runner dry run `20260531T_release_macro_dry` completed with
+  status `dry_run_ok`; no API credentials were present and no API calls were
+  executed.
+
 Private artifacts remain ignored:
 
 - `runs/`
@@ -70,4 +83,4 @@ Next stages:
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.
-- Final public-safe repository audit and release notes.
+- Push only after explicit user approval and a final clean audit.

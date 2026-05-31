@@ -12,7 +12,11 @@ from pathlib import Path
 from typing import Any
 
 
-EXPECTED_ROOT = Path("/scratch/nt612/Github/Segment Macro Betas")
+def configured_expected_root() -> Path | None:
+    raw = os.environ.get("SMB_EXPECTED_PROJECT_ROOT") or os.environ.get("SMB_PROJECT_ROOT")
+    if not raw:
+        return None
+    return Path(raw).expanduser().resolve()
 
 
 ROLE_SPECS: dict[str, dict[str, Any]] = {
@@ -285,11 +289,10 @@ def main() -> int:
     parser.add_argument("--run-id", required=True)
     args = parser.parse_args()
 
-    project_root = Path(args.project_root)
-    if project_root != EXPECTED_ROOT:
-        raise SystemExit(f"Refusing unexpected project root: {project_root}")
-    if project_root.resolve() != EXPECTED_ROOT.resolve():
-        raise SystemExit(f"Resolved project root mismatch: {project_root.resolve()} != {EXPECTED_ROOT.resolve()}")
+    project_root = Path(args.project_root).expanduser()
+    expected_root = configured_expected_root()
+    if expected_root is not None and project_root.resolve() != expected_root:
+        raise SystemExit(f"Resolved project root mismatch: {project_root.resolve()} != {expected_root}")
     if Path.cwd().resolve() != project_root.resolve():
         raise SystemExit(f"Refusing to run outside project root: cwd={Path.cwd()}")
 

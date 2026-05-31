@@ -1,7 +1,7 @@
 project:
-  local_root: "F:/Github/Segment Macro Betas"
-  amarel_root: "/scratch/nt612/Github/Segment Macro Betas"
-  required_slurm_job_id: "5752806"
+  local_root_env: "SMB_LOCAL_PROJECT_ROOT"
+  amarel_root_env: "SMB_PROJECT_ROOT"
+  required_slurm_job_id_env: "SMB_SLURM_JOB_ID"
 
 sample:
   development_start: "2006-01-01"

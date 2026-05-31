@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_ROOT="/scratch/nt612/Github/Segment Macro Betas"
-EXPECTED_JOB_ID="5752806"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/_amarel_env.sh"
 RUN_ID="${1:-$(date -u +%Y%m%dT%H%M%SZ)}"
-PYTHON_BIN="${PYTHON_BIN:-$HOME/.conda/envs/ml_core/bin/python}"
 
 cd "$PROJECT_ROOT"
 

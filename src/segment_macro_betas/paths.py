@@ -5,7 +5,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
-SCRATCH_PROJECT_ROOT = Path("/scratch/nt612/Github/Segment Macro Betas")
+def configured_expected_root() -> Path | None:
+    raw = os.environ.get("SMB_EXPECTED_PROJECT_ROOT") or os.environ.get("SMB_PROJECT_ROOT")
+    if not raw:
+        return None
+    return Path(raw).expanduser().resolve()
+
+
+SCRATCH_PROJECT_ROOT = configured_expected_root()
 
 
 @dataclass(frozen=True)
