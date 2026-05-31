@@ -17,6 +17,7 @@ REQUIRED_PUBLIC_FILES = [
     "pyproject.toml",
     "configs/data.yml",
     "configs/schema_map.yml",
+    "docs/completion_audit.md",
     "docs/release_audit.md",
     "docs/release_notes.md",
     "docs/reproducibility.md",

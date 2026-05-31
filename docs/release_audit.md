@@ -9,6 +9,8 @@ Public release gate:
   the caller's environment instead of hard-coding a private cluster path or job
   id.
 - Public tests use synthetic fixtures or code-level checks only.
+- `docs/completion_audit.md` records verified, data-gated, and not-yet-final
+  requirements before any push.
 - No GitHub remote is required for this preparation step, and nothing should be
   pushed until the user explicitly asks.
 

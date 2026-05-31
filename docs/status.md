@@ -17,6 +17,7 @@ Implemented stages:
 - Visual pack and model-card generator, with private visual pack run
   `20260531T_visual_pack`.
 - Public-safe release audit script and release notes.
+- Requirement-by-requirement completion audit.
 - Smoke and baseline figures generated from private artifacts.
 
 Latest private LightGBM ablation diagnostic:

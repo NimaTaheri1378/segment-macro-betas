@@ -18,6 +18,7 @@ Implemented public code:
   installed build lacks GPU support.
 - Static visual pack, HTML dashboard, and model-card generator.
 - Public safety and release audit checks.
+- Requirement-by-requirement completion audit in `docs/completion_audit.md`.
 
 Private empirical artifacts are intentionally not part of the public release.
 The current private diagnostics are summarized in `docs/status.md` as research
