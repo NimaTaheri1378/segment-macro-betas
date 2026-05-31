@@ -13,6 +13,13 @@ Allowed current wording:
   diagnostics than the segment-only variant.
 - Some LightGBM variants retain positive factor-alpha diagnostics in the cached
   robustness run.
+- Official non-FRED macro data from BLS, BEA, and EIA have been pulled into a
+  no-lookahead macro tensor for the 2006-2025 development sample.
+- The macro-aware `all_plus_macro` LightGBM diagnostic has the strongest
+  current long-short spread and factor-alpha diagnostics in the development
+  sample.
+- The `macro_only` diagnostic is not cross-sectional because the current
+  official macro inputs are global monthly states.
 - Deep Sets validates the segment-set modeling path, but does not currently
   dominate the tabular benchmark.
 - The full Set Transformer path runs on CUDA, but remains a weak diagnostic
@@ -24,8 +31,10 @@ Forbidden current wording:
 - Segment disclosures prove investor underreaction.
 - The strategy is tradable, capacity-safe, arbitrage-like, or fully orthogonal
   to standard factors.
-- Macro-vintage interactions are final before live official macro pulls and
-  macro tensor review.
+- The full FRED-inclusive macro catalog is complete while the FRED API remains
+  rate-limited.
+- Macro-vintage or revision-safe interactions are final before true vintage or
+  realtime macro sources are reviewed.
 - 2026 holdout performance is known before the holdout protocol is explicitly
   opened.
 

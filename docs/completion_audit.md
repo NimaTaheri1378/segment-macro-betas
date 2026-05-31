@@ -14,28 +14,29 @@ release checks are treated as evidence only for the scope they actually cover.
 | Full 2006-2025 WRDS development extract exists | Private extract run `20260530T233446Z`; row counts summarized in `docs/status.md`. |
 | Filing-date activation is implemented and validated | `src/segment_macro_betas/filing_dates.py`, panel integration, and private panel run `20260531T003936Z_panel_filing` with zero activation violations. |
 | Baseline portfolio and cross-sectional diagnostics are implemented | `src/segment_macro_betas/baselines.py`; filing-date baseline run `20260531T004841Z_baseline_filing`. |
-| LightGBM expanding-window ablations are implemented | `src/segment_macro_betas/lgbm_benchmark.py`; filing-date ablation run `20260531T005001Z_lgbm_filing`. |
+| LightGBM expanding-window ablations are implemented | `src/segment_macro_betas/lgbm_benchmark.py`; filing-date ablation run `20260531T005001Z_lgbm_filing`; macro-aware run `20260531T_lgbm_macro_nonfred_v3`. |
 | Segment-set model extension is implemented | `src/segment_macro_betas/segment_set_model.py`; full Deep Sets run `20260531T010832Z_set`; full CUDA Set Transformer run `20260531T_set_transformer_full`. |
-| Factor-alpha and turnover robustness code is implemented | `src/segment_macro_betas/factor_robustness.py`; transformer-aware private diagnostic run `20260531T_factor_robustness_with_transformer`. |
-| Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and transformer-aware private claim-ledger run `20260531T_claim_ledger_with_transformer`. |
-| Publication-style diagnostic tables are implemented | `src/segment_macro_betas/publication_tables.py`, `scripts/run_publication_tables.sh`, and transformer-aware private run `20260531T_publication_tables_with_transformer_v2` with zero review failures. |
-| Visual pack and model card are implemented | `src/segment_macro_betas/visual_pack.py`; transformer-aware visual pack run `20260531T_visual_pack_with_transformer_v2`. |
+| Official non-FRED macro API execution is implemented and executed | `src/segment_macro_betas/macro_engine.py`; private BLS/BEA/EIA run `20260531T_macro_nonfred_full` with 2,480 rows and `lookahead_safe=true`. |
+| Firm-geography-macro tensor is implemented and executed | `src/segment_macro_betas/macro_tensor.py`; private tensor run `20260531T_macro_tensor_nonfred_v2` with 936,897 panel rows, 2,811,167 joined token rows, 9 macro features, and 100% macro coverage. |
+| Factor-alpha and turnover robustness code is implemented | `src/segment_macro_betas/factor_robustness.py`; macro-aware private diagnostic run `20260531T_factor_robustness_macro_nonfred`. |
+| Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and macro-aware private claim-ledger run `20260531T_claim_ledger_macro_nonfred`. |
+| Publication-style diagnostic tables are implemented | `src/segment_macro_betas/publication_tables.py`, `scripts/run_publication_tables.sh`, and macro-aware private run `20260531T_publication_tables_macro_nonfred` with zero review failures. |
+| Visual pack and model card are implemented | `src/segment_macro_betas/visual_pack.py`; macro-aware visual pack run `20260531T_visual_pack_macro_nonfred_v2`. |
 | Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; no configured remote; no push. |
 
 ## Code-Complete But Data-Gated
 
 | Requirement | Current State | Gate |
 |---|---|---|
-| Official macro API execution | `src/segment_macro_betas/macro_engine.py` can read untracked `.env`, load `configs/macro_series.yml`, and execute FRED/BLS/BEA/EIA pulls; multi-source dry run `20260531T_macro_multisource_dry` passed, and execute mode fails closed when required keys are absent. | Requires untracked compute-host secrets and explicit execute run. |
-| Firm-geography-macro tensor | `src/segment_macro_betas/macro_tensor.py` and `scripts/run_macro_tensor.sh` build tensors from cached macro Parquet files, including global macro-state fallback for all segment-token areas. | Requires a private macro run with release or realtime availability dates. |
-| Fully vintage-safe macro interactions | Tensor builder honors `available_date`, `realtime_start`, or `release_date` and flags fallback timing. | Requires cached macro data with vintage/release timing fields. |
+| Full FRED-inclusive macro catalog | Execute mode started the full catalog in `20260531T_macro_full_catalog_guarded_smoke`, completed two FRED series, and then stopped safely on HTTP `429` for `UNRATE`. | Wait before retrying; do not spam the FRED API. |
+| Fully revision-safe macro interactions | The non-FRED macro tensor uses configured availability dates and is no-lookahead, but the source manifest is `revision_safe=false`. | Requires true realtime/vintage macro sources before final revision-safe claims. |
 
 ## Not Yet Final-Claim Ready
 
 | Item | Reason |
 |---|---|
 | 2026 held-out evaluation | The proposal explicitly keeps 2026 untouched; no final holdout run should happen until modeling choices are frozen. |
-| Final transaction-cost and alpha claims | Publication-style diagnostic tables now exist, but final claims still require macro-vintage execution, 2026 holdout protocol, and author sign-off on manuscript wording. |
+| Final transaction-cost and alpha claims | Macro-aware publication-style diagnostic tables now exist, but final claims still require revision-safe macro evidence, 2026 holdout protocol, and author sign-off on manuscript wording. |
 | Final paper claims | Current numbers are diagnostics with guardrails; model-card and docs avoid final asset-pricing claims. |
 
 ## Latest Verification
@@ -62,5 +63,5 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 
 The current release state is suitable for a public-safe code push only after
 the user explicitly authorizes creating/configuring the GitHub remote and
-pushing. It is not a final empirical paper package until the gated macro items
-and 2026 holdout protocol are resolved.
+pushing. It is not a final empirical paper package until the gated FRED,
+revision-safe macro, and 2026 holdout items are resolved.

@@ -23,6 +23,7 @@ SKIP_DIRS = {
     ".ruff_cache",
 }
 SKIP_SUFFIXES = (".egg-info",)
+SKIP_FILENAMES = {".env"}
 
 
 def iter_public_files(root: Path):
@@ -32,6 +33,8 @@ def iter_public_files(root: Path):
         if any(part in SKIP_DIRS for part in path.parts):
             continue
         if any(part.endswith(SKIP_SUFFIXES) for part in path.parts):
+            continue
+        if path.name in SKIP_FILENAMES:
             continue
         yield path
 

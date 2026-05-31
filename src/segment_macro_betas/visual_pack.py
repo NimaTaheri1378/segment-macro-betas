@@ -326,6 +326,12 @@ def write_dashboard(html_dir: Path, run_id: str, figures: dict[str, Path], compa
 
 def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, Any], comparison: pd.DataFrame) -> Path:
     checks = panel_manifest["checks"]
+
+    def metric(value: Any) -> str:
+        if pd.isna(value):
+            return "n/a"
+        return f"{float(value):.6f}"
+
     lines = [
         "# Segment Macro Betas Model Card",
         "",
@@ -340,7 +346,10 @@ def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, An
         "|---|---|---:|---:|",
     ]
     for row in comparison.to_dict(orient="records"):
-        lines.append(f"| {row['family']} | `{row['variant']}` | {row['mean_rank_ic']} | {row['mean_q5_minus_q1']} |")
+        lines.append(
+            f"| {row['family']} | `{row['variant']}` | {metric(row['mean_rank_ic'])} | "
+            f"{metric(row['mean_q5_minus_q1'])} |"
+        )
     lines.extend(
         [
             "",
@@ -351,7 +360,7 @@ def write_model_card(report_dir: Path, run_id: str, panel_manifest: dict[str, An
             "- Segment-only tabular features rank returns strongly, but control-rich variants produce stronger long-short spreads.",
             "- The first Deep Sets extension has modest positive rank IC in the set-only variant and weak long-short spread.",
             "- The full Set Transformer run is a CUDA-validated architecture diagnostic, not a dominant economic spread result.",
-            "- Macro API/vintage execution remains dry-run until private compute-host secret handling is enabled.",
+            "- Official non-FRED macro diagnostics are live, while full FRED and revision-safe macro claims remain blocked.",
             "",
         ]
     )

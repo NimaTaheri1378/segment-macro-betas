@@ -12,7 +12,8 @@ Implemented public code:
 - Baseline portfolio and cross-sectional diagnostics.
 - Public FRED/BLS/BEA/EIA macro-series catalog plus cached macro tensor
   construction with timing flags.
-- Expanding-window LightGBM benchmark with feature ablations.
+- Expanding-window LightGBM benchmark with feature ablations and optional
+  macro-aware panel datasets.
 - Deep Sets segment-set benchmark plus full CUDA Set Transformer diagnostic.
 - Cached factor-alpha and turnover robustness diagnostics.
 - Publication-style private diagnostic table renderer for model comparison,
@@ -33,11 +34,13 @@ status notes, not as final paper claims.
 
 Known gated items:
 
-- Macro API execution requires an untracked compute-host `.env`.
-- Full vintage-safe macro interactions require private cached macro files with
-  release or realtime availability dates.
-- Live macro-vintage execution, final transaction-cost/capacity claims, and
-  2026 holdout evaluation remain future stages.
+- Official non-FRED macro execution has run privately from an untracked
+  compute-host `.env`; the full FRED-inclusive catalog is currently blocked by
+  HTTP `429` rate limiting.
+- Full revision-safe macro interactions require private cached macro files with
+  true vintage or realtime availability dates.
+- Final transaction-cost/capacity claims and 2026 holdout evaluation remain
+  future stages.
 
 Before pushing, run:
 

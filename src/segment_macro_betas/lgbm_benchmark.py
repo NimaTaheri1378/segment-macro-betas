@@ -49,6 +49,9 @@ FEATURE_VARIANTS = {
     "no_return_or_market": SEGMENT_FEATURES + FIRM_FEATURES,
     "segment_only": SEGMENT_FEATURES,
     "non_segment_controls": FIRM_FEATURES + RETURN_FEATURES + MARKET_FEATURES,
+    "macro_only": [],
+    "segment_plus_macro": SEGMENT_FEATURES,
+    "all_plus_macro": DEFAULT_FEATURES,
 }
 LGBM_DEVICE_TYPES = {"auto", "cpu", "gpu"}
 
@@ -76,7 +79,8 @@ def build_feature_frame(panel: pd.DataFrame, *, holdout_start: str = "2026-01-01
     if TARGET not in df.columns:
         raise KeyError(f"Required target column missing: {TARGET}")
 
-    for col in set(DEFAULT_FEATURES + [TARGET, "mktcap", "at", "ceq", "sale", "ni", "capx", "xrd", "dltt", "dlc", "segment_sales_sum"]):
+    macro_features = sorted(col for col in df.columns if col.startswith("segment_macro_"))
+    for col in set(DEFAULT_FEATURES + macro_features + [TARGET, "mktcap", "at", "ceq", "sale", "ni", "capx", "xrd", "dltt", "dlc", "segment_sales_sum"]):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
@@ -99,7 +103,7 @@ def build_feature_frame(panel: pd.DataFrame, *, holdout_start: str = "2026-01-01
     if {"dltt", "dlc", "at"}.issubset(df.columns):
         df["leverage"] = safe_ratio(df["dltt"].fillna(0.0) + df["dlc"].fillna(0.0), df["at"])
 
-    features = [col for col in DEFAULT_FEATURES if col in df.columns]
+    features = [col for col in DEFAULT_FEATURES + macro_features if col in df.columns]
     keep = ["gvkey", "permno", "date", TARGET] + features
     df = df[keep].replace([np.inf, -np.inf], np.nan)
     for col in [TARGET] + features:
@@ -126,6 +130,15 @@ def parse_lgbm_device_type(raw: str | None) -> str:
 
 
 def select_features(available_features: list[str], variant: str) -> list[str]:
+    macro_features = [feature for feature in available_features if feature.startswith("segment_macro_")]
+    if variant == "macro_only":
+        return macro_features
+    if variant == "segment_plus_macro":
+        requested = SEGMENT_FEATURES + macro_features
+        return [feature for feature in requested if feature in available_features]
+    if variant == "all_plus_macro":
+        requested = DEFAULT_FEATURES + macro_features
+        return [feature for feature in requested if feature in available_features]
     requested = FEATURE_VARIANTS[variant]
     return [feature for feature in requested if feature in available_features]
 
@@ -175,6 +188,10 @@ def prediction_quintile_returns(predictions: pd.DataFrame) -> tuple[pd.DataFrame
     scored = predictions.copy()
     scored["prediction_quintile"] = scored.groupby("date", group_keys=False)["prediction"].apply(safe_quintiles)
     scored = scored[scored["prediction_quintile"].notna()].copy()
+    quintile_cols = ["date", "prediction_quintile", "mean_next_excess_ret", "n", "mean_prediction"]
+    spread_cols = ["date", "q5_minus_q1", "cum_q5_minus_q1"]
+    if scored.empty:
+        return pd.DataFrame(columns=quintile_cols), pd.DataFrame(columns=spread_cols)
     scored["prediction_quintile"] = scored["prediction_quintile"].astype(int)
     quintiles = (
         scored.groupby(["date", "prediction_quintile"], as_index=False)
@@ -182,7 +199,9 @@ def prediction_quintile_returns(predictions: pd.DataFrame) -> tuple[pd.DataFrame
         .sort_values(["date", "prediction_quintile"])
     )
     wide = quintiles.pivot(index="date", columns="prediction_quintile", values="mean_next_excess_ret")
-    spread = (wide.get(5) - wide.get(1)).rename("q5_minus_q1").reset_index()
+    q1 = wide[1] if 1 in wide.columns else pd.Series(np.nan, index=wide.index)
+    q5 = wide[5] if 5 in wide.columns else pd.Series(np.nan, index=wide.index)
+    spread = (q5 - q1).rename("q5_minus_q1").reset_index()
     spread["cum_q5_minus_q1"] = (1.0 + spread["q5_minus_q1"].fillna(0.0)).cumprod() - 1.0
     return quintiles, spread
 
@@ -204,7 +223,13 @@ def fit_predict_lgbm(
 
     prediction_frames: list[pd.DataFrame] = []
     importance_frames: list[pd.DataFrame] = []
-    runtime: dict[str, Any] = {"requested_device_type": device_type, "actual_device_types": [], "gpu_fallbacks": 0}
+    runtime: dict[str, Any] = {
+        "requested_device_type": device_type,
+        "actual_device_types": [],
+        "gpu_fallbacks": 0,
+        "gpu_disabled_after_first_failure": False,
+    }
+    gpu_disabled = False
     for fold_index, fold in enumerate(folds):
         train_mask = (frame["date"] >= fold["train_start"]) & (frame["date"] <= fold["train_end"])
         val_mask = (frame["date"] >= fold["validation_start"]) & (frame["date"] <= fold["validation_end"])
@@ -229,7 +254,10 @@ def fit_predict_lgbm(
             "n_jobs": n_jobs,
             "verbosity": -1,
         }
-        requested_fold_device = "gpu" if device_type == "auto" else device_type
+        if device_type == "auto" and gpu_disabled:
+            requested_fold_device = "cpu"
+        else:
+            requested_fold_device = "gpu" if device_type == "auto" else device_type
         if requested_fold_device == "gpu":
             params["device_type"] = "gpu"
         model = lgb.LGBMRegressor(**params)
@@ -240,6 +268,8 @@ def fit_predict_lgbm(
             if device_type != "auto" or requested_fold_device != "gpu":
                 raise
             runtime["gpu_fallbacks"] += 1
+            gpu_disabled = True
+            runtime["gpu_disabled_after_first_failure"] = True
             actual_device = "cpu"
             params.pop("device_type", None)
             model = lgb.LGBMRegressor(**params)
@@ -360,7 +390,14 @@ def summarize_variant(
         "mean_q5_minus_q1": float(spread["q5_minus_q1"].mean()) if len(spread) else None,
         "t_q5_minus_q1": t_stat(spread["q5_minus_q1"]) if len(spread) else None,
     }
-    status = "ok" if len(predictions) and len(rank_ic) and len(features) else "needs_review"
+    status_reason = None
+    if len(predictions) and len(rank_ic) and len(features):
+        status = "ok"
+    elif variant == "macro_only" and len(predictions) and len(features) and not len(rank_ic):
+        status = "diagnostic_only"
+        status_reason = "global_macro_features_have_no_within_month_cross_sectional_variation"
+    else:
+        status = "needs_review"
     outputs = {
         "predictions": str(prediction_path),
         "fold_metrics": str(fold_metrics_path),
@@ -370,12 +407,13 @@ def summarize_variant(
         "feature_importance": str(feature_importance_path),
         **figure_outputs,
     }
-    summary_row = {"variant": variant, "features": int(len(features)), "status": status, **checks}
+    summary_row = {"variant": variant, "features": int(len(features)), "status": status, "status_reason": status_reason, **checks}
     variant_manifest = {
         "features": features,
         "checks": checks,
         "outputs": outputs,
         "status": status,
+        "status_reason": status_reason,
     }
     return variant_manifest, summary_row, feature_importance
 
@@ -385,6 +423,7 @@ def run_lgbm_benchmark(
     panel_run_id: str,
     run_id: str,
     *,
+    panel_dataset: str = "monthly_panel",
     n_jobs: int = 4,
     min_train_months: int = 36,
     max_train_rows_per_fold: int | None = None,
@@ -392,7 +431,7 @@ def run_lgbm_benchmark(
     device_type: str = "auto",
 ) -> dict[str, Any]:
     paths = make_run_paths(project_root, run_id)
-    panel_path = ensure_within(project_root, project_root / "data" / "interim" / panel_run_id / "monthly_panel.parquet")
+    panel_path = ensure_within(project_root, project_root / "data" / "interim" / panel_run_id / f"{panel_dataset}.parquet")
     tables_dir = ensure_within(project_root, project_root / "artifacts" / "tables" / run_id)
     figures_dir = ensure_within(project_root, project_root / "artifacts" / "figures_static" / run_id)
     tables_dir.mkdir(parents=True, exist_ok=True)
@@ -437,7 +476,8 @@ def run_lgbm_benchmark(
     summary_path = tables_dir / "lgbm_summary.csv"
     summary.to_csv(summary_path, index=False)
 
-    status = "ok" if len(summary) and (summary["status"] == "ok").all() else "needs_review"
+    acceptable_statuses = {"ok", "diagnostic_only"}
+    status = "ok" if len(summary) and summary["status"].isin(acceptable_statuses).all() and (summary["status"] == "ok").any() else "needs_review"
     manifest = {
         "run_id": run_id,
         "panel_run_id": panel_run_id,
@@ -462,6 +502,7 @@ def run_lgbm_benchmark(
         "inputs": {"panel": str(panel_path), "panel_rows": int(len(panel)), "feature_rows": int(len(frame))},
         "checks": {
             "variants_ok": int((summary["status"] == "ok").sum()) if len(summary) else 0,
+            "variants_diagnostic_only": int((summary["status"] == "diagnostic_only").sum()) if len(summary) else 0,
             "variants_total": int(len(summary)),
             "best_rank_ic_variant": summary.sort_values("mean_rank_ic", ascending=False)["variant"].iloc[0] if len(summary) else None,
             "best_spread_variant": summary.sort_values("mean_q5_minus_q1", ascending=False)["variant"].iloc[0] if len(summary) else None,
@@ -509,6 +550,7 @@ def main() -> int:
     parser.add_argument("--project-root", required=True)
     parser.add_argument("--panel-run-id", required=True)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--panel-dataset", default="monthly_panel")
     parser.add_argument("--n-jobs", type=int, default=4)
     parser.add_argument("--min-train-months", type=int, default=36)
     parser.add_argument("--max-train-rows-per-fold", type=int, default=None)
@@ -520,6 +562,7 @@ def main() -> int:
         project_root,
         args.panel_run_id,
         args.run_id,
+        panel_dataset=args.panel_dataset,
         n_jobs=args.n_jobs,
         min_train_months=args.min_train_months,
         max_train_rows_per_fold=args.max_train_rows_per_fold,

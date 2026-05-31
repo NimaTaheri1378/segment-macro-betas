@@ -1,10 +1,17 @@
 from pathlib import Path
+import subprocess
 import unittest
 
 
 class PublicSafetyTests(unittest.TestCase):
-    def test_no_env_file_committed(self) -> None:
-        self.assertFalse(Path(".env").exists())
+    def test_env_file_is_private_not_tracked(self) -> None:
+        try:
+            tracked = subprocess.run(["git", "ls-files", ".env"], capture_output=True, text=True)
+        except FileNotFoundError:
+            tracked = None
+        if tracked is not None and tracked.returncode == 0:
+            self.assertEqual("", tracked.stdout.strip())
+        self.assertIn(".env", Path(".gitignore").read_text(encoding="utf-8"))
 
     def test_gitignore_protects_private_paths(self) -> None:
         text = Path(".gitignore").read_text(encoding="utf-8")

@@ -15,6 +15,8 @@ Implemented stages:
 - Deep Sets segment-set model code, Slurm runner, and full-panel run
   `20260531T010832Z_set`.
 - Full CUDA Set Transformer segment-set diagnostic.
+- Official non-FRED macro API execution, macro tensor construction, and
+  macro-aware LightGBM diagnostics.
 - Factor-alpha and turnover robustness runner from cached model predictions.
 - Claim-ledger and table-inventory generator for wording discipline.
 - Publication-style diagnostic table renderer for model comparison,
@@ -54,21 +56,66 @@ Latest private Deep Sets segment-set diagnostic:
   `0.007315`, and mean Q5-Q1 `0.000426`. Treat as a full-scale architecture
   diagnostic, not as evidence that attention dominates the tabular benchmark.
 
-Latest private factor robustness diagnostic:
+Latest private official macro diagnostic:
 
-- Run: `20260531T_factor_robustness_with_transformer`.
+- Full FRED/BLS/BEA/EIA catalog guarded smoke:
+  `20260531T_macro_full_catalog_guarded_smoke`.
+- The guarded smoke stopped safely on FRED HTTP `429` after 2 completed FRED
+  series and before producing full-catalog outputs.
+- Non-FRED official macro run: `20260531T_macro_nonfred_full`.
+- Sources: BLS, BEA, and EIA.
+- Series: unemployment rate, GDP growth, and WTI crude oil price.
+- Macro rows: `2480`.
+- Window: 2006-2025 development sample.
+- Timing flags: `lookahead_safe=true`, `revision_safe=false`.
+
+Latest private macro tensor diagnostic:
+
+- Run: `20260531T_macro_tensor_nonfred_v2`.
+- Macro run: `20260531T_macro_nonfred_full`.
 - Panel run: `20260531T003936Z_panel_filing`.
-- Model runs: `20260531T005001Z_lgbm_filing`, `20260531T010832Z_set`, and
-  `20260531T_set_transformer_full`.
+- Panel rows: `936897`.
+- Joined token rows: `2811167`.
+- Joined token match rate: `1.0`.
+- Macro feature count: `9`.
+- Macro coverage rate: `1.0`.
+- Macro availability source: `available_date`.
+- Timing flags: `lookahead_safe=true`, `revision_safe=false`.
+
+Latest private macro-aware LightGBM diagnostic:
+
+- Run: `20260531T_lgbm_macro_nonfred_v3`.
+- Panel dataset: `macro_tensor_panel` from
+  `20260531T_macro_tensor_nonfred_v2`.
+- Feature rows: `926895`.
+- Prediction rows per variant: `772000`.
+- Variants: 4 cross-sectional variants `ok`, plus `macro_only` marked
+  `diagnostic_only` because global macro features have no within-month
+  cross-sectional ranking variation.
+- Best rank-IC variant: `segment_only`, mean rank IC `0.036475`.
+- Best Q5-Q1 spread variant: `all_plus_macro`, mean Q5-Q1 `0.010795`,
+  t-stat `3.718524`.
+- `all_plus_macro`: mean rank IC `0.026850`, t-stat `3.807517`.
+- `segment_plus_macro`: mean rank IC `0.017409`, mean Q5-Q1 `0.003772`.
+- LightGBM requested GPU in auto mode, detected the installed build lacks the
+  GPU tree learner, disabled further GPU attempts after the first failure per
+  variant, and recorded CPU fallback in the manifest.
+
+Latest private macro-aware factor robustness diagnostic:
+
+- Run: `20260531T_factor_robustness_macro_nonfred`.
+- Panel run: `20260531T003936Z_panel_filing`.
+- Model runs: `20260531T_lgbm_macro_nonfred_v3`,
+  `20260531T010832Z_set`, and `20260531T_set_transformer_full`.
 - Prediction rows evaluated: `6176000`.
-- Variants evaluated: `8`.
-- Spread-month rows: `1528`.
+- Spread-capable variants evaluated: `7`.
+- Spread-month rows: `1337`.
 - Factor months available: `239`.
 - Cost assumption: `10` bps per one-way turnover.
-- Best net Q5-Q1 variant: `lgbm:non_segment_controls`, mean net Q5-Q1
-  `0.006624`, t-stat `2.155836`.
-- Best factor-alpha variant: `lgbm:no_return_or_market`, gross monthly alpha
-  `0.006141`, t-stat `2.582860`.
+- Best net Q5-Q1 variant: `lgbm:all_plus_macro`, mean net Q5-Q1
+  `0.010245`, t-stat `3.528957`.
+- Best factor-alpha variant: `lgbm:all_plus_macro`, gross monthly alpha
+  `0.008763`, t-stat `2.962949`.
 - Segment-only LightGBM robustness: mean net Q5-Q1 `0.003756`, t-stat
   `1.920601`, gross monthly alpha `0.001023`.
 - Full Set Transformer robustness: mean net Q5-Q1 `0.000367`, t-stat
@@ -76,24 +123,24 @@ Latest private factor robustness diagnostic:
 
 Latest private claim ledger:
 
-- Run: `20260531T_claim_ledger_with_transformer`.
+- Run: `20260531T_claim_ledger_macro_nonfred`.
 - Claim rows: `7`.
 - Validation failures: `0`.
-- Blocked claims: `1` for live macro execution.
+- Blocked claims: `1` for final macro-vintage or holdout wording.
 - Table-inventory rows: `40`.
 - Allowed wording is diagnostic-only and keeps macro-vintage and 2026 holdout
   claims blocked.
 
 Latest private publication-style diagnostic tables:
 
-- Run: `20260531T_publication_tables_with_transformer_v2`.
+- Run: `20260531T_publication_tables_macro_nonfred`.
 - Inputs: panel `20260531T003936Z_panel_filing`, LightGBM
-  `20260531T005001Z_lgbm_filing`, Deep Sets `20260531T010832Z_set`, full Set
-  Transformer `20260531T_set_transformer_full`, factor robustness
-  `20260531T_factor_robustness_with_transformer`, and claim ledger
-  `20260531T_claim_ledger_with_transformer`.
+  `20260531T_lgbm_macro_nonfred_v3`, Deep Sets `20260531T010832Z_set`, full
+  Set Transformer `20260531T_set_transformer_full`, factor robustness
+  `20260531T_factor_robustness_macro_nonfred`, and claim ledger
+  `20260531T_claim_ledger_macro_nonfred`.
 - Model-comparison rows: `8`.
-- Factor-alpha and cost rows: `8`.
+- Factor-alpha and cost rows: `7`.
 - Review failures: `0`.
 - Claim-validation failures: `0`.
 - Reports generated as ignored private Markdown/LaTeX artifacts under `runs/`;
@@ -101,7 +148,7 @@ Latest private publication-style diagnostic tables:
 
 Latest private visual pack:
 
-- Run: `20260531T_visual_pack_with_transformer_v2`.
+- Run: `20260531T_visual_pack_macro_nonfred_v2`.
 - Figure count: `7`.
 - Model comparison rows: `8`.
 - Firm explorer rows: `30`.
@@ -115,9 +162,9 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 58 unit tests.
+- Local checks passed: release audit, public safety scan, and 64 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 58 unit tests.
+  audit, public safety scan, and 64 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
@@ -138,7 +185,9 @@ Latest macro-tensor code status:
 - Execute-mode missing-secret guard run
   `20260531T_macro_multisource_missing_guard` stopped before any API call with
   status `missing_credentials`.
-- Full macro API execution is still gated on an untracked compute-host `.env`.
+- Official non-FRED macro execution completed in
+  `20260531T_macro_nonfred_full`; the full FRED-inclusive catalog is blocked
+  by HTTP `429` rate limiting and should not be retried aggressively.
 
 Latest GPU modeling code status:
 
@@ -164,15 +213,16 @@ Private artifacts remain ignored:
 
 Next stages:
 
-- Macro vintage engine execution once local secret handling is enabled on the
-  compute host.
+- Wait before retrying the full FRED-inclusive macro catalog; do not spam FRED.
+- Add or source revision-safe macro vintages if final vintage claims are needed.
 - Interpret the LightGBM ablation carefully: segment-only features rank returns
-  well, while full/non-segment-control variants currently produce the stronger
-  long-short spread.
+  well, while the non-FRED `all_plus_macro` variant currently produces the
+  strongest long-short spread and factor-alpha diagnostics.
 - Interpret factor robustness carefully: no-return-or-market and
-  no-market-factor LightGBM variants have the strongest alpha diagnostics,
-  while segment-only features remain weaker after factor adjustment. The
-  publication-style tables remain diagnostic and are not final paper claims.
+  no-market-factor LightGBM variants were strongest before macro integration;
+  after the non-FRED macro tensor run, `all_plus_macro` is the strongest
+  diagnostic. The publication-style tables remain diagnostic and are not final
+  paper claims.
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.

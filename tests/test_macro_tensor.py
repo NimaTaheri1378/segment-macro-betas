@@ -91,6 +91,9 @@ class MacroTensorTests(unittest.TestCase):
         self.assertAlmostEqual(float(second["segment_macro_eu_ip"]), 4.0)
         self.assertEqual(len(tokens), 4)
         self.assertEqual(checks["aggregation"]["firm_month_rows"], 2)
+        self.assertEqual(checks["panel_rows_with_tokens"], 2)
+        self.assertLessEqual(checks["joined_token_match_rate"], 1.0)
+        self.assertGreaterEqual(checks["joined_tokens_per_panel_row"], 1.0)
         self.assertTrue(checks["macro"]["vintage_safe"])
 
     def test_global_macro_area_applies_to_all_segment_tokens(self) -> None:

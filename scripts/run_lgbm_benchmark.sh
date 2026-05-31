@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/_amarel_env.sh"
 PANEL_RUN_ID="${PANEL_RUN_ID:?PANEL_RUN_ID required}"
+PANEL_DATASET="${PANEL_DATASET:-monthly_panel}"
 RUN_ID="${1:-$(date -u +%Y%m%dT%H%M%SZ)}"
 N_JOBS="${N_JOBS:-${SLURM_CPUS_PER_TASK:-4}}"
 MIN_TRAIN_MONTHS="${MIN_TRAIN_MONTHS:-36}"
@@ -22,6 +23,7 @@ export OPENBLAS_NUM_THREADS=1
 {
   echo "lgbm_benchmark_run_id=${RUN_ID}"
   echo "panel_run_id=${PANEL_RUN_ID}"
+  echo "panel_dataset=${PANEL_DATASET}"
   echo "started_utc=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   echo "hostname=$(hostname)"
   echo "pwd=$(pwd)"
@@ -40,6 +42,7 @@ export OPENBLAS_NUM_THREADS=1
     --project-root "$PROJECT_ROOT"
     --panel-run-id "$PANEL_RUN_ID"
     --run-id "$RUN_ID"
+    --panel-dataset "$PANEL_DATASET"
     --n-jobs "$N_JOBS"
     --min-train-months "$MIN_TRAIN_MONTHS"
     --variants "$VARIANTS"

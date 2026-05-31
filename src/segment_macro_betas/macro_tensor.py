@@ -246,6 +246,7 @@ def build_macro_tensor(
         on=["gvkey", "segment_srcdate"],
         how="inner",
     )
+    panel_keys_with_tokens = token_frame[["gvkey", "permno", "date"]].drop_duplicates().shape[0] if len(token_frame) else 0
     macro_states, macro_checks = prepare_macro_states(macro, release_lag_days=release_lag_days)
     token_macro, feature_cols = attach_macro_to_tokens(token_frame, macro_states)
     aggregated, agg_checks = aggregate_macro_features(token_macro, feature_cols)
@@ -254,7 +255,9 @@ def build_macro_tensor(
         "panel_rows": int(len(frame)),
         "segment_token_rows": int(len(segment_tokens)),
         "joined_token_rows": int(len(token_frame)),
-        "joined_token_match_rate": float(len(token_frame) / len(frame)) if len(frame) else None,
+        "panel_rows_with_tokens": int(panel_keys_with_tokens),
+        "joined_token_match_rate": float(panel_keys_with_tokens / len(frame)) if len(frame) else None,
+        "joined_tokens_per_panel_row": float(len(token_frame) / len(frame)) if len(frame) else None,
         "macro": macro_checks,
         "aggregation": agg_checks,
     }

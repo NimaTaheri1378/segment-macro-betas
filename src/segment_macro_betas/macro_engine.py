@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -326,6 +327,28 @@ def missing_credentials(catalog: list[dict[str, Any]], env_values: dict[str, str
     return [key for key in required if not env_values.get(key)]
 
 
+def macro_fetch_error(series: dict[str, Any], exc: Exception) -> dict[str, Any]:
+    detail = {
+        "source": series.get("source"),
+        "series_id": series.get("series_id"),
+        "series_name": series.get("series_name"),
+        "error_type": type(exc).__name__,
+        "message": str(exc)[:500],
+    }
+    if isinstance(exc, HTTPError):
+        detail["http_status"] = int(exc.code)
+        detail["http_reason"] = str(exc.reason)
+    if isinstance(exc, URLError):
+        detail["url_reason"] = str(exc.reason)
+    return detail
+
+
+def write_macro_manifest(paths, manifest: dict[str, Any]) -> dict[str, Any]:
+    atomic_write_json(paths.manifests / "macro_engine.json", manifest)
+    atomic_write_text(paths.reports / "macro_engine_report.md", report_text(manifest))
+    return manifest
+
+
 def run_macro(project_root: Path, run_id: str, start: str, end: str, execute: bool, series_config: Path | None = None) -> dict:
     paths = make_run_paths(project_root, run_id)
     env_values = {**read_env_file(project_root / ".env"), **os.environ}
@@ -350,21 +373,27 @@ def run_macro(project_root: Path, run_id: str, start: str, end: str, execute: bo
     }
     if not execute:
         manifest["status"] = "dry_run_ok"
-        atomic_write_json(paths.manifests / "macro_engine.json", manifest)
-        atomic_write_text(paths.reports / "macro_engine_report.md", report_text(manifest))
-        return manifest
+        return write_macro_manifest(paths, manifest)
 
     missing = missing_credentials(catalog, env_values)
     if missing:
         manifest["status"] = "missing_credentials"
         manifest["missing_credentials"] = missing
-        atomic_write_json(paths.manifests / "macro_engine.json", manifest)
-        atomic_write_text(paths.reports / "macro_engine_report.md", report_text(manifest))
-        return manifest
+        return write_macro_manifest(paths, manifest)
 
     frames = []
     for series in catalog:
-        frames.append(fetch_series(series, env_values, start, end))
+        try:
+            frames.append(fetch_series(series, env_values, start, end))
+        except Exception as exc:
+            manifest["status"] = "api_error"
+            manifest["api_errors"] = [macro_fetch_error(series, exc)]
+            manifest["checks"] = {
+                "series_attempted": len(frames) + 1,
+                "series_completed": len(frames),
+                "series_total": len(catalog),
+            }
+            return write_macro_manifest(paths, manifest)
     macro = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
     out_path = ensure_within(project_root, project_root / "data" / "raw" / run_id / "macro_official_monthly.parquet")
     atomic_write_parquet(macro, out_path)
@@ -380,9 +409,7 @@ def run_macro(project_root: Path, run_id: str, start: str, end: str, execute: bo
         "available_date_max": str(pd.to_datetime(macro["available_date"]).max().date()) if len(macro) else None,
     }
     manifest["status"] = "ok"
-    atomic_write_json(paths.manifests / "macro_engine.json", manifest)
-    atomic_write_text(paths.reports / "macro_engine_report.md", report_text(manifest))
-    return manifest
+    return write_macro_manifest(paths, manifest)
 
 
 def report_text(manifest: dict) -> str:
@@ -399,6 +426,7 @@ def report_text(manifest: dict) -> str:
             f"- Sources: `{', '.join(manifest.get('checks', {}).get('sources', []))}`",
             f"- Lookahead-safe dates: `{manifest.get('checks', {}).get('lookahead_safe', '')}`",
             f"- Revision-safe vintages: `{manifest.get('checks', {}).get('revision_safe', '')}`",
+            f"- API errors: `{len(manifest.get('api_errors', []))}`",
             "",
             "Credential values are not stored in this manifest.",
             "Configured release lags are no-lookahead timing controls, not proof of unrevised vintage data.",

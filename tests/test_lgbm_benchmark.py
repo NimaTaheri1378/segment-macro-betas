@@ -1,7 +1,15 @@
 import pandas as pd
 import unittest
 
-from segment_macro_betas.lgbm_benchmark import build_feature_frame, make_yearly_folds, monthly_rank_ic, parse_lgbm_device_type, parse_variants, select_features
+from segment_macro_betas.lgbm_benchmark import (
+    build_feature_frame,
+    make_yearly_folds,
+    monthly_rank_ic,
+    parse_lgbm_device_type,
+    parse_variants,
+    prediction_quintile_returns,
+    select_features,
+)
 
 
 class LgbmBenchmarkTests(unittest.TestCase):
@@ -27,12 +35,14 @@ class LgbmBenchmarkTests(unittest.TestCase):
                 "xrd": [5.0, None],
                 "dltt": [100.0, 105.0],
                 "dlc": [10.0, 11.0],
+                "segment_macro_bls_unemployment_rate": [4.0, 4.1],
             }
         )
         frame, features = build_feature_frame(panel)
         self.assertEqual(len(frame), 2)
         self.assertIn("book_to_market", features)
         self.assertIn("rd_to_assets", features)
+        self.assertIn("segment_macro_bls_unemployment_rate", features)
         self.assertAlmostEqual(float(frame.iloc[0]["book_to_market"]), 0.25)
         self.assertTrue(all(str(frame[col].dtype) == "float64" for col in features + ["next_month_excess_ret"]))
 
@@ -43,10 +53,16 @@ class LgbmBenchmarkTests(unittest.TestCase):
         self.assertLess(folds[-1]["validation_end"], pd.Timestamp("2026-01-01"))
 
     def test_parse_and_select_variants(self) -> None:
-        variants = parse_variants("all,segment_only")
-        self.assertEqual(variants, ["all", "segment_only"])
-        selected = select_features(["foreign_share", "log_mktcap", "mktrf"], "segment_only")
-        self.assertEqual(selected, ["foreign_share"])
+        variants = parse_variants("all,segment_only,macro_only")
+        self.assertEqual(variants, ["all", "segment_only", "macro_only"])
+        available = ["foreign_share", "geo_hhi", "log_mktcap", "mktrf", "segment_macro_bls_unemployment_rate"]
+        selected = select_features(available, "segment_only")
+        self.assertEqual(selected, ["foreign_share", "geo_hhi"])
+        self.assertEqual(select_features(available, "macro_only"), ["segment_macro_bls_unemployment_rate"])
+        self.assertEqual(
+            select_features(available, "segment_plus_macro"),
+            ["foreign_share", "geo_hhi", "segment_macro_bls_unemployment_rate"],
+        )
         with self.assertRaises(ValueError):
             parse_variants("unknown")
 
@@ -65,6 +81,19 @@ class LgbmBenchmarkTests(unittest.TestCase):
             }
         )
         self.assertTrue(monthly_rank_ic(predictions).empty)
+
+    def test_prediction_quintiles_handle_constant_predictions(self) -> None:
+        predictions = pd.DataFrame(
+            {
+                "date": ["2020-01-31"] * 30,
+                "permno": range(10000, 10030),
+                "prediction": [1.0] * 30,
+                "next_month_excess_ret": [0.01] * 30,
+            }
+        )
+        quintiles, spread = prediction_quintile_returns(predictions)
+        self.assertTrue(quintiles.empty)
+        self.assertEqual(list(spread.columns), ["date", "q5_minus_q1", "cum_q5_minus_q1"])
 
 
 if __name__ == "__main__":

@@ -12,6 +12,8 @@ Current implementation status:
 - Smoke-panel pipeline implemented for a tiny private WRDS sample.
 - Full annual WRDS shard extraction, monthly panel construction, first-pass
   baselines, and an expanding-window LightGBM benchmark are implemented.
+- Official non-FRED macro extraction, macro tensor construction, and
+  macro-aware LightGBM diagnostics are implemented for private runs.
 - Public repository files are code, configs, docs, and tests only.
 - Private data, credentials, and run logs are intentionally excluded from
   version control.
@@ -111,6 +113,19 @@ By default this runner executes feature ablations: `all`,
 run. `LGBM_DEVICE_TYPE=auto` attempts LightGBM GPU training first and records
 any CPU fallback in the manifest.
 
+For macro-aware diagnostics, pass a macro tensor run and dataset name:
+
+```bash
+PANEL_RUN_ID=<macro-tensor-run-id> \
+PANEL_DATASET=macro_tensor_panel \
+VARIANTS=macro_only,segment_plus_macro,all_plus_macro,segment_only,non_segment_controls \
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=8 bash scripts/run_lgbm_benchmark.sh
+```
+
+`macro_only` is expected to be diagnostic-only when the macro inputs are global
+monthly states with no within-month cross-sectional variation.
+
 Run the Deep Sets segment-set extension:
 
 ```bash
@@ -128,7 +143,7 @@ Run factor-alpha and turnover robustness from cached predictions:
 
 ```bash
 PANEL_RUN_ID=20260531T003936Z_panel_filing \
-MODEL_RUNS=lgbm:20260531T005001Z_lgbm_filing,deepsets:20260531T010832Z_set,deepsets:20260531T_set_transformer_full \
+MODEL_RUNS=lgbm:20260531T_lgbm_macro_nonfred_v3,deepsets:20260531T010832Z_set,deepsets:20260531T_set_transformer_full \
 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
   --ntasks=1 --cpus-per-task=2 bash scripts/run_factor_robustness.sh
 ```
@@ -137,10 +152,10 @@ Generate the private claim ledger and table inventory from cached diagnostics:
 
 ```bash
 PANEL_RUN_ID=20260531T003936Z_panel_filing \
-LGBM_RUN_ID=20260531T005001Z_lgbm_filing \
+LGBM_RUN_ID=20260531T_lgbm_macro_nonfred_v3 \
 SET_RUN_ID=20260531T010832Z_set \
 SET_RUN_IDS=20260531T010832Z_set,20260531T_set_transformer_full \
-FACTOR_RUN_ID=20260531T_factor_robustness_with_transformer \
+FACTOR_RUN_ID=20260531T_factor_robustness_macro_nonfred \
 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
   --ntasks=1 --cpus-per-task=1 bash scripts/run_claim_ledger.sh
 ```
@@ -149,11 +164,11 @@ Render private publication-style diagnostic tables after claim-ledger review:
 
 ```bash
 PANEL_RUN_ID=20260531T003936Z_panel_filing \
-LGBM_RUN_ID=20260531T005001Z_lgbm_filing \
+LGBM_RUN_ID=20260531T_lgbm_macro_nonfred_v3 \
 SET_RUN_ID=20260531T010832Z_set \
 SET_RUN_IDS=20260531T010832Z_set,20260531T_set_transformer_full \
-FACTOR_RUN_ID=20260531T_factor_robustness_with_transformer \
-CLAIM_RUN_ID=20260531T_claim_ledger_with_transformer \
+FACTOR_RUN_ID=20260531T_factor_robustness_macro_nonfred \
+CLAIM_RUN_ID=20260531T_claim_ledger_macro_nonfred \
 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
   --ntasks=1 --cpus-per-task=1 bash scripts/run_publication_tables.sh
 ```
@@ -164,7 +179,7 @@ Generate the private visual pack and model card:
 RAW_RUN_ID=20260530T233446Z \
 PANEL_RUN_ID=20260531T003936Z_panel_filing \
 BASELINE_RUN_ID=20260531T004841Z_baseline_filing \
-LGBM_RUN_ID=20260531T005001Z_lgbm_filing \
+LGBM_RUN_ID=20260531T_lgbm_macro_nonfred_v3 \
 SET_RUN_ID=20260531T010832Z_set \
 SET_RUN_IDS=20260531T010832Z_set,20260531T_set_transformer_full \
 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \

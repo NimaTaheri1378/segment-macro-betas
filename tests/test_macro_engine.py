@@ -7,6 +7,7 @@ import pandas as pd
 from segment_macro_betas.macro_engine import (
     add_configured_availability,
     load_series_catalog,
+    macro_fetch_error,
     missing_credentials,
     parse_period_to_date,
     read_env_file,
@@ -70,6 +71,14 @@ class MacroEngineTests(unittest.TestCase):
         ]
         missing = missing_credentials(catalog, {"FRED_API_KEY": "x", "BLS_API_KEY": "x"})
         self.assertEqual(missing, ["BEA_API_KEY", "EIA_API_KEY"])
+
+    def test_macro_fetch_error_summarizes_without_credentials(self) -> None:
+        series = {"source": "fred", "series_id": "FEDFUNDS", "series_name": "federal_funds_rate"}
+        out = macro_fetch_error(series, RuntimeError("HTTP Error 429: Too Many Requests"))
+        self.assertEqual(out["source"], "fred")
+        self.assertEqual(out["series_id"], "FEDFUNDS")
+        self.assertIn("429", out["message"])
+        self.assertNotIn("API_KEY", str(out))
 
 
 if __name__ == "__main__":
