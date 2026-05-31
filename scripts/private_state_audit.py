@@ -21,6 +21,7 @@ EXPECTED_RUNS = {
     "claim_ledger": ("20260531T_claim_ledger_macro_nonfred", "claim_ledger"),
     "publication_tables": ("20260531T_publication_tables_macro_nonfred", "publication_tables"),
     "visual_pack": ("20260531T_visual_pack_macro_nonfred_v2", "visual_pack"),
+    "holdout_protocol": ("20260531T_holdout_protocol_freeze", "holdout_protocol"),
     "fred_guard": ("20260531T_macro_full_catalog_guarded_smoke", "macro_engine"),
 }
 
@@ -143,6 +144,12 @@ def audit(root: Path) -> dict[str, Any]:
     visual = manifests.get("visual_pack", {})
     require(rows, "visual_pack", "status_ok", visual.get("status") == "ok", f"status={visual.get('status')}")
     require(rows, "visual_pack", "figures", nested(visual, "checks", "figure_count", default=0) >= 7, f"checks={visual.get('checks')}")
+
+    holdout = manifests.get("holdout_protocol", {})
+    require(rows, "holdout_protocol", "status_frozen", holdout.get("status") == "frozen", f"status={holdout.get('status')}")
+    require(rows, "holdout_protocol", "holdout_unopened", holdout.get("holdout_opened") is False, f"holdout_opened={holdout.get('holdout_opened')}")
+    require(rows, "holdout_protocol", "selected_model", nested(holdout, "selected_model", "variant") == "all_plus_macro", f"selected_model={holdout.get('selected_model')}")
+    require(rows, "holdout_protocol", "no_freeze_failures", nested(holdout, "checks", "failed") == 0, f"checks={holdout.get('checks')}")
 
     fred = manifests.get("fred_guard", {})
     errors = fred.get("api_errors", [])

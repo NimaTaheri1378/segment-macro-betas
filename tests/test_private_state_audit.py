@@ -68,6 +68,16 @@ class PrivateStateAuditTests(unittest.TestCase):
             write_manifest(root, "claim_ledger", {"status": "ok", "checks": {"validation_failures": 0, "blocked_claims": 1}})
             write_manifest(root, "publication_tables", {"status": "ok", "checks": {"review_failures": 0, "claim_validation_failures": 0}})
             write_manifest(root, "visual_pack", {"status": "ok", "checks": {"figure_count": 7}})
+            write_manifest(
+                root,
+                "holdout_protocol",
+                {
+                    "status": "frozen",
+                    "holdout_opened": False,
+                    "selected_model": {"variant": "all_plus_macro"},
+                    "checks": {"failed": 0},
+                },
+            )
             write_manifest(root, "fred_guard", {"status": "api_error", "api_errors": [{"http_status": 429}]})
 
             result = audit(root)

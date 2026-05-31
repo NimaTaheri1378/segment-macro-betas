@@ -27,6 +27,8 @@ Implemented public code:
 - Public safety and release audit checks.
 - Private-state manifest audit for ignored empirical artifacts and known
   blockers.
+- Holdout-protocol freeze script that records the selected development-sample
+  model while keeping 2026 unopened.
 - GitHub CI runs public safety scan, release audit, and unit tests.
 - GitHub release checklist in `docs/github_release_checklist.md`.
 - Claim guardrails and private claim-ledger generator.
@@ -43,8 +45,9 @@ Known gated items:
   HTTP `429` rate limiting.
 - Full revision-safe macro interactions require private cached macro files with
   true vintage or realtime availability dates.
-- Final transaction-cost/capacity claims and 2026 holdout evaluation remain
-  future stages.
+- Final transaction-cost/capacity claims and 2026 holdout performance remain
+  future stages; the holdout freeze records the protocol, not the holdout
+  result.
 
 Before pushing, run:
 

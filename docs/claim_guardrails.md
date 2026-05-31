@@ -24,6 +24,8 @@ Allowed current wording:
   dominate the tabular benchmark.
 - The full Set Transformer path runs on CUDA, but remains a weak diagnostic
   relative to the current LightGBM spread and alpha results.
+- The 2026 holdout protocol can be described as frozen only when the private
+  holdout manifest reports `status=frozen` and `holdout_opened=false`.
 
 Forbidden current wording:
 
@@ -37,6 +39,7 @@ Forbidden current wording:
   realtime macro sources are reviewed.
 - 2026 holdout performance is known before the holdout protocol is explicitly
   opened.
+- A frozen holdout protocol is the same as a passed 2026 performance result.
 
 Every manuscript-facing claim should map to a private manifest, table, or
 figure and should be regenerated through `scripts/run_claim_ledger.sh` after

@@ -22,6 +22,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and macro-aware private claim-ledger run `20260531T_claim_ledger_macro_nonfred`. |
 | Publication-style diagnostic tables are implemented | `src/segment_macro_betas/publication_tables.py`, `scripts/run_publication_tables.sh`, and macro-aware private run `20260531T_publication_tables_macro_nonfred` with zero review failures. |
 | Visual pack and model card are implemented | `src/segment_macro_betas/visual_pack.py`; macro-aware visual pack run `20260531T_visual_pack_macro_nonfred_v2`. |
+| 2026 holdout protocol is frozen without opening holdout data | `scripts/freeze_holdout_protocol.py`; private holdout freeze run `20260531T_holdout_protocol_freeze` selects `lgbm:all_plus_macro` from development diagnostics and records `holdout_opened=false`. |
 | Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; private-state audit `20260531T_private_state_audit` has zero failures; no configured remote; no push. |
 
 ## Code-Complete But Data-Gated
@@ -35,8 +36,8 @@ release checks are treated as evidence only for the scope they actually cover.
 
 | Item | Reason |
 |---|---|
-| 2026 held-out evaluation | The proposal explicitly keeps 2026 untouched; no final holdout run should happen until modeling choices are frozen. |
-| Final transaction-cost and alpha claims | Macro-aware publication-style diagnostic tables now exist, but final claims still require revision-safe macro evidence, 2026 holdout protocol, and author sign-off on manuscript wording. |
+| 2026 held-out evaluation | The model/protocol freeze is recorded, but `holdout_opened=false`; no 2026 performance has been evaluated. |
+| Final transaction-cost and alpha claims | Macro-aware publication-style diagnostic tables now exist, but final claims still require revision-safe macro evidence, future holdout-result review, and author sign-off on manuscript wording. |
 | Final paper claims | Current numbers are diagnostics with guardrails; model-card and docs avoid final asset-pricing claims. |
 
 ## Latest Verification

@@ -32,8 +32,15 @@ When private ignored run artifacts are present, audit the proposal frontier:
 python scripts/private_state_audit.py --run-id <private-audit-run-id>
 ```
 
-This checks the schema, WRDS extract, panel, model, macro, table, visual, and
-known blocker manifests without exposing private data.
+This checks the schema, WRDS extract, panel, model, macro, table, visual,
+holdout-protocol, and known blocker manifests without exposing private data.
+
+Freeze the private 2026 holdout protocol after selecting the development-sample
+model, without opening 2026:
+
+```bash
+python scripts/freeze_holdout_protocol.py --run-id <private-holdout-freeze-run-id>
+```
 
 On Amarel, set the approved project root and allocation id in your shell before
 calling any runner:

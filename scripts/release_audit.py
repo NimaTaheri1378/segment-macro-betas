@@ -31,6 +31,7 @@ REQUIRED_PUBLIC_FILES = [
     "scripts/private_state_audit.py",
     "scripts/run_claim_ledger.sh",
     "scripts/run_factor_robustness.sh",
+    "scripts/freeze_holdout_protocol.py",
     "scripts/run_macro_engine.sh",
     "scripts/run_macro_tensor.sh",
     "scripts/run_publication_tables.sh",
