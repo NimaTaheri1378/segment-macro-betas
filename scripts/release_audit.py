@@ -31,6 +31,7 @@ REQUIRED_PUBLIC_FILES = [
     "scripts/run_factor_robustness.sh",
     "scripts/run_macro_engine.sh",
     "scripts/run_macro_tensor.sh",
+    "scripts/run_publication_tables.sh",
 ]
 PRIVATE_TRACKED_PREFIXES = (
     ".codex/",

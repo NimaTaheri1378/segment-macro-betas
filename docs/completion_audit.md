@@ -18,6 +18,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Segment-set model extension is implemented | `src/segment_macro_betas/segment_set_model.py`; full Deep Sets run `20260531T010832Z_set`; optional Set Transformer variant is executable by explicit `VARIANTS=set_transformer`. |
 | Factor-alpha and turnover robustness code is implemented | `src/segment_macro_betas/factor_robustness.py`; private diagnostic run status is tracked in `docs/status.md`. |
 | Claim ledger and wording guardrails are implemented | `src/segment_macro_betas/claim_ledger.py`, `docs/claim_guardrails.md`, and private claim-ledger run status in `docs/status.md`. |
+| Publication-style diagnostic tables are implemented | `src/segment_macro_betas/publication_tables.py`, `scripts/run_publication_tables.sh`, and private run `20260531T_publication_tables_clean` with zero review failures. |
 | Visual pack and model card are implemented | `src/segment_macro_betas/visual_pack.py`; visual pack run `20260531T_visual_pack`. |
 | Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; no configured remote; no push. |
 
@@ -34,7 +35,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Item | Reason |
 |---|---|
 | 2026 held-out evaluation | The proposal explicitly keeps 2026 untouched; no final holdout run should happen until modeling choices are frozen. |
-| Final transaction-cost and alpha claims | Factor robustness diagnostics and claim guardrails are implemented, but final claims still require reviewed specifications and publication tables. |
+| Final transaction-cost and alpha claims | Publication-style diagnostic tables now exist, but final claims still require macro-vintage execution, 2026 holdout protocol, and author sign-off on manuscript wording. |
 | Full Set Transformer scale run | The optional Set Transformer variant is implemented, but only Deep Sets has been scaled on the full panel so far. |
 | Final paper claims | Current numbers are diagnostics with guardrails; model-card and docs avoid final asset-pricing claims. |
 
@@ -62,5 +63,5 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 
 The current release state is suitable for a public-safe code push only after
 the user explicitly authorizes creating/configuring the GitHub remote and
-pushing. It is not a final empirical paper package until the gated macro items,
-reviewed alpha/transaction-cost tables, and 2026 holdout protocol are resolved.
+pushing. It is not a final empirical paper package until the gated macro items
+and 2026 holdout protocol are resolved.

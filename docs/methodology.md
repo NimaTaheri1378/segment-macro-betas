@@ -27,6 +27,10 @@ The factor-robustness layer evaluates model-sorted long-short portfolios
 against available benchmark factors, records Newey-West alpha diagnostics, and
 adds a simple turnover-cost adjustment. Factor returns are aligned to the
 realized next-month return date rather than the portfolio-formation date.
+The publication-table layer then repackages cached model, alpha, and cost
+diagnostics into private Markdown, CSV, and LaTeX tables with explicit notes on
+the development sample, cost assumption, Newey-West lag, 2026 holdout status,
+and still-gated macro-vintage claims.
 
 The LightGBM layer uses an expanding time-series validation design. For each
 validation year, it trains only on earlier firm-months and predicts

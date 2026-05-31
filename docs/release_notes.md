@@ -15,6 +15,8 @@ Implemented public code:
 - Expanding-window LightGBM benchmark with feature ablations.
 - Deep Sets segment-set benchmark plus optional Set Transformer variant.
 - Cached factor-alpha and turnover robustness diagnostics.
+- Publication-style private diagnostic table renderer for model comparison,
+  factor-alpha, and turnover-cost outputs.
 - GPU-aware model runners: PyTorch set models use CUDA when available, and
   LightGBM attempts GPU training with an explicit manifest fallback if the
   installed build lacks GPU support.
@@ -34,8 +36,8 @@ Known gated items:
 - Macro API execution requires an untracked compute-host `.env`.
 - Full vintage-safe macro interactions require private cached macro files with
   release or realtime availability dates.
-- Full Set Transformer scaling, final reviewed factor-alpha tables,
-  transaction-cost specifications, and 2026 holdout evaluation remain future
+- Full Set Transformer scaling, live macro-vintage execution, final
+  transaction-cost/capacity claims, and 2026 holdout evaluation remain future
   stages.
 
 Before pushing, run:

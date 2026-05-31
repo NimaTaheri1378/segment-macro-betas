@@ -17,6 +17,8 @@ Implemented stages:
 - Optional Set Transformer segment-set variant.
 - Factor-alpha and turnover robustness runner from cached model predictions.
 - Claim-ledger and table-inventory generator for wording discipline.
+- Publication-style diagnostic table renderer for model comparison,
+  factor-alpha, and turnover-cost outputs.
 - Visual pack and model-card generator, with private visual pack run
   `20260531T_visual_pack`.
 - Public-safe release audit script and release notes.
@@ -79,6 +81,20 @@ Latest private claim ledger:
 - Allowed wording is diagnostic-only and keeps macro-vintage and 2026 holdout
   claims blocked.
 
+Latest private publication-style diagnostic tables:
+
+- Run: `20260531T_publication_tables_clean`.
+- Inputs: panel `20260531T003936Z_panel_filing`, LightGBM
+  `20260531T005001Z_lgbm_filing`, Deep Sets `20260531T010832Z_set`, factor
+  robustness `20260531T_factor_robustness_clean`, and claim ledger
+  `20260531T_claim_ledger`.
+- Model-comparison rows: `7`.
+- Factor-alpha and cost rows: `7`.
+- Review failures: `0`.
+- Claim-validation failures: `0`.
+- Reports generated as ignored private Markdown/LaTeX artifacts under `runs/`;
+  table CSVs generated under ignored `artifacts/tables/`.
+
 Latest private visual pack:
 
 - Run: `20260531T_visual_pack`.
@@ -95,9 +111,9 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 54 unit tests.
+- Local checks passed: release audit, public safety scan, and 58 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 54 unit tests.
+  audit, public safety scan, and 58 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
@@ -151,7 +167,8 @@ Next stages:
   long-short spread.
 - Interpret factor robustness carefully: no-return-or-market and
   no-market-factor LightGBM variants have the strongest alpha diagnostics,
-  while segment-only features remain weaker after factor adjustment.
+  while segment-only features remain weaker after factor adjustment. The
+  publication-style tables remain diagnostic and are not final paper claims.
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.

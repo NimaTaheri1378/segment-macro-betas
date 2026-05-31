@@ -43,3 +43,9 @@ The factor robustness runner reads cached model prediction Parquet files under
 `artifacts/tables/<model_run_id>/` and benchmark factor columns from the
 private monthly panel. It writes gross and net long-short spreads, turnover
 diagnostics, and factor-alpha summaries under ignored artifacts and run logs.
+
+The publication-table runner reads cached LightGBM, set-model,
+factor-robustness, and claim-validation summaries under ignored
+`artifacts/tables/<run_id>/` folders. It writes private reviewed diagnostic
+tables as CSV files under `artifacts/tables/<publication_run_id>/` and Markdown
+or LaTeX reports under `runs/<publication_run_id>/reports/`.

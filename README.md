@@ -144,6 +144,18 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
   --ntasks=1 --cpus-per-task=1 bash scripts/run_claim_ledger.sh
 ```
 
+Render private publication-style diagnostic tables after claim-ledger review:
+
+```bash
+PANEL_RUN_ID=20260531T003936Z_panel_filing \
+LGBM_RUN_ID=20260531T005001Z_lgbm_filing \
+SET_RUN_ID=20260531T010832Z_set \
+FACTOR_RUN_ID=20260531T_factor_robustness_clean \
+CLAIM_RUN_ID=20260531T_claim_ledger \
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=1 bash scripts/run_publication_tables.sh
+```
+
 Generate the private visual pack and model card:
 
 ```bash
