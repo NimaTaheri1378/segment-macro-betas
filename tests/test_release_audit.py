@@ -23,6 +23,12 @@ class ReleaseAuditTests(unittest.TestCase):
         self.assertNotIn("/scratch/", text)
         self.assertIsNone(re.search(r'EXPECTED_JOB_ID="\d+', text))
 
+    def test_ci_runs_release_audit(self) -> None:
+        text = Path(".github/workflows/ci.yml").read_text(encoding="utf-8")
+        self.assertIn("scripts/public_safety_scan.py", text)
+        self.assertIn("scripts/release_audit.py", text)
+        self.assertIn("python -m unittest discover -s tests", text)
+
 
 if __name__ == "__main__":
     unittest.main()

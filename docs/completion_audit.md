@@ -18,7 +18,7 @@ release checks are treated as evidence only for the scope they actually cover.
 | Segment-set model extension is implemented | `src/segment_macro_betas/segment_set_model.py`; full Deep Sets run `20260531T010832Z_set`; optional Set Transformer variant is executable by explicit `VARIANTS=set_transformer`. |
 | Factor-alpha and turnover robustness code is implemented | `src/segment_macro_betas/factor_robustness.py`; private diagnostic run status is tracked in `docs/status.md`. |
 | Visual pack and model card are implemented | `src/segment_macro_betas/visual_pack.py`; visual pack run `20260531T_visual_pack`. |
-| Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml`, release docs, release audit, public safety scan, no configured remote, and no push. |
+| Public-safe GitHub preparation is implemented | `.github/workflows/ci.yml` runs public safety scan, release audit, and tests; release docs/checklist exist; no configured remote; no push. |
 
 ## Code-Complete But Data-Gated
 

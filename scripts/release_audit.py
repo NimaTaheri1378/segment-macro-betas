@@ -19,6 +19,7 @@ REQUIRED_PUBLIC_FILES = [
     "configs/macro_series.yml",
     "configs/schema_map.yml",
     "docs/completion_audit.md",
+    "docs/github_release_checklist.md",
     "docs/release_audit.md",
     "docs/release_notes.md",
     "docs/reproducibility.md",

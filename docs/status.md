@@ -83,9 +83,10 @@ Latest public release-prep check:
 - Hard-coded private Amarel path and allocation id removed from public runner
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
-- Local checks passed: release audit, public safety scan, and 43 unit tests.
+- CI now runs the public safety scan, release audit, and unit tests.
+- Local checks passed: release audit, public safety scan, and 47 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 43 unit tests.
+  audit, public safety scan, and 47 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
