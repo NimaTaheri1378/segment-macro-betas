@@ -1,51 +1,160 @@
 # Segment Macro Betas
 
-Point-in-time equity asset-pricing study of segment-implied macro exposure.
+<p align="center">
+  <b>Research-grade asset-pricing pipeline for testing whether firm geographic segment disclosures reveal macro exposures that predict cross-sectional equity returns.</b>
+</p>
 
-The project turns Compustat geographic segment disclosures into firm-level
-macro exposure measures, links those measures to CRSP returns through CCM, and
-tests whether disclosure-implied macro betas predict cross-sectional returns.
+<p align="center">
+  <b>Python | WRDS-scale data engineering | Point-in-time finance ML | Public-safe code release</b>
+</p>
 
-Current implementation status:
+## Executive Summary
 
-- WRDS schema audit completed and frozen in `configs/schema_map.yml`.
-- Smoke-panel pipeline implemented for a tiny private WRDS sample.
-- Full annual WRDS shard extraction, monthly panel construction, first-pass
-  baselines, and an expanding-window LightGBM benchmark are implemented.
-- Official FRED/BLS/BEA/EIA macro extraction, macro tensor construction, and
-  macro-aware LightGBM diagnostics are implemented for private runs.
-- Static visual-pack, dashboard, model-card, and publication-table generation
-  scripts are implemented; the rendered WRDS-derived outputs are inventoried in
-  `docs/output_inventory.md` and intentionally ignored.
-- Public repository files are code, configs, docs, and tests only.
-- Private data, credentials, and run logs are intentionally excluded from
-  version control.
+This repository is the public-safe version of a full empirical finance project.
+The private pipeline maps Compustat geographic segment disclosures into
+firm-month macro exposure tensors, links them to CRSP returns through CCM, and
+tests whether segment-implied macro exposures forecast future stock returns.
 
-Run public-safe checks locally:
+The project is intentionally framed as a research pipeline, not a live trading
+system. The public repository contains source code, configuration files,
+documentation, tests, CI, and regeneration scripts. Raw WRDS extracts,
+credentials, cluster logs, private Parquet caches, generated figures,
+dashboards, and row-level outputs are excluded.
+
+## Research Question
+
+> Do firms' disclosed geographic business segments reveal macroeconomic
+> exposure that helps predict future cross-sectional equity returns after
+> enforcing point-in-time availability?
+
+The economic intuition is that segment disclosures expose where firms earn
+revenue and operate. If those disclosures map firms to macro states before
+returns are realized, then geography-by-segment information can become a
+structured source of macro beta variation across firms.
+
+## Headline Private Diagnostics
+
+These are private-run development-sample diagnostics summarized for project
+orientation. They are not final paper claims, and the 2026 holdout remains
+unopened.
+
+| Item | Development-sample value |
+|---|---:|
+| Sample window | 2006-2025 |
+| Monthly modeling panel rows | 936,897 |
+| Joined segment-token rows | 2,811,167 |
+| Full macro catalog | 8 FRED/BLS/BEA/EIA series |
+| Full-catalog macro feature count | 24 |
+| Full-catalog macro coverage | 100% |
+| Full-catalog LightGBM Q5-Q1 | 0.795% per month |
+| Full-catalog LightGBM Q5-Q1 t-stat | 2.63 |
+| Revision-safe FRED initial-release Q5-Q1 | 0.883% per month |
+| Revision-safe FRED initial-release Q5-Q1 t-stat | 2.85 |
+| 2026 holdout status | Frozen, unopened |
+
+The full FRED/BLS/BEA/EIA catalog uses configured no-lookahead availability
+dates, but it is not true historical-vintage evidence for every series. The
+revision-safe wording is limited to the included FRED initial-release chain.
+
+## Pipeline Architecture
+
+```mermaid
+flowchart LR
+    A[Compustat segment disclosures] --> B[Point-in-time segment activation]
+    C[CRSP monthly returns] --> D[CCM-linked firm-month panel]
+    B --> D
+    E[FRED/BLS/BEA/EIA macro catalog] --> F[Availability-timed macro panel]
+    D --> G[Segment x geography x macro tensor]
+    F --> G
+    G --> H[Baselines and LightGBM]
+    G --> I[Deep Sets and Set Transformer]
+    H --> J[Factor robustness and turnover costs]
+    I --> J
+    J --> K[Claim ledger, tables, visuals, holdout freeze]
+```
+
+## Visual And Output Layer
+
+The visual layer is implemented as code and verified against private ignored
+artifacts. Rendered WRDS-derived outputs are intentionally not tracked.
+
+Implemented outputs include:
+
+- Sample and activation coverage figures.
+- Sector-geography exposure matrix.
+- Foreign-share distribution.
+- Exposure time-series diagnostics.
+- Model rank-IC and long-short spread comparisons.
+- Publication-style model and factor-robustness tables.
+- Claim ledger and wording guardrails.
+- HTML dashboard and model-card report.
+- 2026 holdout protocol freeze manifest.
+
+See `docs/output_inventory.md` for the public-safe inventory of verified
+private outputs and regeneration commands.
+
+## What Is Public Here
+
+| Component | Included? | Notes |
+|---|---:|---|
+| Source code and package structure | Yes | `src/segment_macro_betas/` |
+| WRDS/schema contracts | Yes | Table and column contracts only |
+| Runner scripts | Yes | Require caller-provided project root and allocation id |
+| Tests and CI | Yes | Synthetic/code-level checks only |
+| Public configs and docs | Yes | No credentials or private paths |
+| Raw WRDS extracts | No | Excluded by license and policy |
+| Private Parquet/model caches | No | Excluded through `.gitignore` |
+| Generated tables/figures/dashboards | No | Verified privately, not redistributed |
+| API keys or `.env` files | No | `.env.example` only |
+
+## Skills Demonstrated
+
+| Area | What this project demonstrates |
+|---|---|
+| Data engineering | WRDS schema audit, sharded extracts, cached panel construction |
+| Empirical finance | CRSP/Compustat/CCM linking, point-in-time accounting availability |
+| Macro data | FRED/BLS/BEA/EIA adapters with availability-date timing metadata |
+| Financial ML | Expanding-window LightGBM, rank IC, decile spreads, ablations |
+| Deep learning | PyTorch Deep Sets and Set Transformer segment-set diagnostics |
+| Backtesting discipline | Turnover-aware portfolios and factor-alpha robustness |
+| Research governance | Claim ledger, holdout freeze, revision-safety guardrails |
+| Release engineering | Public-safe packaging, secret scans, CI, ignored private artifacts |
+
+## Repository Map
+
+```text
+configs/                  Public configs and frozen schema contracts
+docs/                     Release notes, methodology, status, output inventory
+scripts/                  Amarel/Slurm runners and public safety gates
+src/segment_macro_betas/  Research package
+tests/                    Synthetic and code-level unit tests
+runs/                     Private ignored run logs and manifests
+data/                     Private ignored WRDS extracts and caches
+artifacts/                Private ignored tables, figures, and dashboards
+```
+
+## Public-Safe Checks
+
+Run these before any push:
 
 ```bash
 python scripts/public_safety_scan.py
 python scripts/release_audit.py
+python scripts/private_state_audit.py --run-id <private-audit-run-id>
 python -m unittest discover -s tests
 ```
 
-When private ignored run artifacts are present, audit the proposal frontier:
+The release audit fails if private data folders are tracked, required release
+files are missing, private operational markers appear in public text files, or
+data-like outputs such as CSV, Parquet, HTML dashboards, PNG figures, pickles,
+database files, spreadsheets, and archives are tracked.
 
-```bash
-python scripts/private_state_audit.py --run-id <private-audit-run-id>
-```
+## Reproducing Private Runs
 
-This checks the schema, WRDS extract, panel, model, macro, table, visual,
-holdout-protocol, and known blocker manifests without exposing private data.
+Full reproduction requires authorized WRDS access and private API keys for the
+macro providers. Credentials live only in an untracked compute-host `.env`.
 
-Freeze the private 2026 holdout protocol after selecting the development-sample
-model, without opening 2026:
-
-```bash
-python scripts/freeze_holdout_protocol.py --run-id <private-holdout-freeze-run-id>
-```
-
-On Amarel, set the approved project root and allocation id in your shell before
+On Amarel, set the approved project root and allocation id in the shell before
 calling any runner:
 
 ```bash
@@ -53,161 +162,46 @@ export SMB_PROJECT_ROOT="/path/to/Segment Macro Betas"
 export SMB_SLURM_JOB_ID="<approved-allocation-id>"
 ```
 
-Run the WRDS smoke panel on Amarel only inside the approved Slurm allocation:
+Example runner pattern:
 
 ```bash
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_smoke_panel.sh
-```
-
-Plan or execute the sharded full extraction:
-
-```bash
-# Dry-run query contracts only
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_full_extract.sh
-
-# Full annual shards, launched only after review
-EXECUTE=1 YEARS=2006-2025 INCLUDE_DAILY=0 \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_full_extract.sh
-```
-
-Plan or execute the macro engine:
-
-```bash
-EXECUTE=0 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_macro_engine.sh
-```
-
-The macro catalog lives in `configs/macro_series.yml` and supports FRED, BLS,
-BEA, and EIA rows. Live execution requires an untracked compute-host `.env`;
-manifests record credential presence and timing flags, never credential values.
-Set `MACRO_REQUEST_DELAY_SECONDS` for cautious live API retries; if a later
-series fails, the macro engine writes a private `.partial.parquet` cache for
-completed series while keeping the run status as `api_error`.
-For revision-safe FRED experiments, use a private copy of
-`configs/macro_series_fred_initial_release.example.yml`; it requests
-initial-release observations and uses FRED `realtime_start` as the availability
-date.
-
-Build the firm-geography-macro tensor from cached macro data:
-
-```bash
-RAW_RUN_ID=20260530T233446Z \
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-MACRO_RUN_ID=<macro-run-id> \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=2 bash scripts/run_macro_tensor.sh
-```
-
-Build the monthly modeling panel from a completed raw run:
-
-```bash
-RAW_RUN_ID=20260530T233446Z \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_build_panel.sh
-```
-
-Add the targeted Compustat filing-date supplement before rebuilding the panel:
-
-```bash
-RAW_RUN_ID=20260530T233446Z EXECUTE=1 \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_filing_dates_extract.sh
-```
-
-Run first-pass portfolio and cross-sectional baselines:
-
-```bash
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_baselines.sh
-```
-
-Run the LightGBM expanding-window benchmark:
-
-```bash
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=8 bash scripts/run_lgbm_benchmark.sh
-```
-
-By default this runner executes feature ablations: `all`,
-`no_market_factors`, `no_return_or_market`, `segment_only`, and
-`non_segment_controls`. Override with `VARIANTS=segment_only` for a targeted
-run. `LGBM_DEVICE_TYPE=auto` attempts LightGBM GPU training first and records
-any CPU fallback in the manifest.
-
-For macro-aware diagnostics, pass a macro tensor run and dataset name:
-
-```bash
-PANEL_RUN_ID=<macro-tensor-run-id> \
-PANEL_DATASET=macro_tensor_panel \
-VARIANTS=macro_only,segment_plus_macro,all_plus_macro,segment_only,non_segment_controls \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=8 bash scripts/run_lgbm_benchmark.sh
-```
-
-`macro_only` is expected to be diagnostic-only when the macro inputs are global
-monthly states with no within-month cross-sectional variation.
-
-Run the Deep Sets segment-set extension:
-
-```bash
-RAW_RUN_ID=20260530T233446Z PANEL_RUN_ID=20260531T003936Z_panel_filing \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=8 bash scripts/run_segment_set_model.sh
-```
-
-`SET_DEVICE_TYPE=auto` uses CUDA for the PyTorch Deep Sets model whenever the
-allocation exposes a GPU.
-Use `VARIANTS=set_transformer` for the optional self-attention segment-set
-encoder.
-
-Run factor-alpha and turnover robustness from cached predictions:
-
-```bash
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-MODEL_RUNS=lgbm:20260531T_lgbm_macro_nonfred_v3,deepsets:20260531T010832Z_set,deepsets:20260531T_set_transformer_full \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=2 bash scripts/run_factor_robustness.sh
-```
-
-Generate the private claim ledger and table inventory from cached diagnostics:
-
-```bash
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-LGBM_RUN_ID=20260531T_lgbm_macro_nonfred_v3 \
-SET_RUN_ID=20260531T010832Z_set \
-SET_RUN_IDS=20260531T010832Z_set,20260531T_set_transformer_full \
-FACTOR_RUN_ID=20260531T_factor_robustness_macro_nonfred \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_claim_ledger.sh
-```
-
-Render private publication-style diagnostic tables after claim-ledger review:
-
-```bash
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-LGBM_RUN_ID=20260531T_lgbm_macro_nonfred_v3 \
-SET_RUN_ID=20260531T010832Z_set \
-SET_RUN_IDS=20260531T010832Z_set,20260531T_set_transformer_full \
-FACTOR_RUN_ID=20260531T_factor_robustness_macro_nonfred \
-CLAIM_RUN_ID=20260531T_claim_ledger_macro_nonfred \
-srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
-  --ntasks=1 --cpus-per-task=1 bash scripts/run_publication_tables.sh
-```
-
-Generate the private visual pack and model card:
-
-```bash
-RAW_RUN_ID=20260530T233446Z \
-PANEL_RUN_ID=20260531T003936Z_panel_filing \
-BASELINE_RUN_ID=20260531T004841Z_baseline_filing \
-LGBM_RUN_ID=20260531T_lgbm_macro_nonfred_v3 \
-SET_RUN_ID=20260531T010832Z_set \
-SET_RUN_IDS=20260531T010832Z_set,20260531T_set_transformer_full \
 srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
   --ntasks=1 --cpus-per-task=4 bash scripts/run_visual_pack.sh
 ```
+
+Core runners:
+
+```text
+scripts/run_schema_audit.sh
+scripts/run_full_extract.sh
+scripts/run_filing_dates_extract.sh
+scripts/run_build_panel.sh
+scripts/run_macro_engine.sh
+scripts/run_macro_tensor.sh
+scripts/run_baselines.sh
+scripts/run_lgbm_benchmark.sh
+scripts/run_segment_set_model.sh
+scripts/run_factor_robustness.sh
+scripts/run_claim_ledger.sh
+scripts/run_publication_tables.sh
+scripts/run_visual_pack.sh
+```
+
+## Data Safety
+
+Raw and derived WRDS data are not redistributed. This repository is designed as
+a research and reproducibility scaffold: it exposes the code, contracts,
+tests, and documentation needed to understand and rerun the pipeline, while
+keeping licensed data, private logs, credentials, and generated private outputs
+outside version control.
+
+## Status
+
+The full proposal-grade implementation has been completed for the development
+sample, including schema audit, full WRDS extract, point-in-time panel,
+macro tensor, LightGBM, segment-set models, factor robustness, publication
+tables, visual pack, claim ledger, and holdout freeze. The 2026 holdout is
+frozen but unopened.
+
+See `docs/status.md`, `docs/completion_audit.md`, and `docs/release_notes.md`
+for the detailed audit trail.
