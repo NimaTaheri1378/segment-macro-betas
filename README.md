@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/figures/diagnostic_snapshot.svg" alt="Development-sample diagnostic snapshot" width="900">
+  <img src="docs/figures/full_catalog_model_spread_comparison.png" alt="Full-catalog model long-short spread comparison" width="900">
 </p>
 
 ## Executive Summary
@@ -37,26 +37,55 @@ documentation, tests, CI, and regeneration scripts. Raw WRDS extracts,
 credentials, cluster logs, private Parquet caches, generated figures,
 dashboards, and row-level outputs are excluded.
 
-## Visual Overview
+## Visual Results
 
 <p align="center">
-  <img src="docs/figures/pipeline_architecture.svg" alt="Pipeline architecture" width="900">
+  <b>Aggregate development-sample outputs from the full-catalog private run.</b><br>
+  These figures summarize model and exposure diagnostics; they do not contain
+  raw WRDS extracts or row-level firm/security panels.
 </p>
 
 <table>
 <tr>
 <td width="50%">
-  <img src="docs/figures/release_boundary.svg" alt="Public-safe release boundary" width="100%">
-  <br><b>Release boundary.</b><br>
-  Public code, tests, documentation, and aggregate schematics are tracked.
-  Licensed data, row-level panels, private logs, and generated dashboards stay
-  outside Git.
+  <img src="docs/figures/full_catalog_model_spread_comparison.png" alt="Full-catalog model spread comparison" width="100%">
+  <br><b>Long-short spread comparison.</b><br>
+  Full-catalog LightGBM variants are compared against segment-only and set-model
+  benchmarks using predicted Q5 minus Q1 next-month excess returns.
 </td>
 <td width="50%">
-  <img src="docs/figures/diagnostic_snapshot.svg" alt="Private diagnostic aggregate snapshot" width="100%">
-  <br><b>Diagnostic snapshot.</b><br>
-  The headline numbers are aggregate development-sample diagnostics, not raw
-  WRDS rows or final paper claims.
+  <img src="docs/figures/full_catalog_model_rank_ic_comparison.png" alt="Full-catalog model rank IC comparison" width="100%">
+  <br><b>Rank-IC comparison.</b><br>
+  Segment-only features rank returns well, while macro-aware variants are
+  evaluated for incremental economic spread and factor robustness.
+</td>
+</tr>
+<tr>
+<td width="50%">
+  <img src="docs/figures/full_catalog_sector_geography_matrix.png" alt="Sector geography exposure matrix" width="100%">
+  <br><b>Sector-geography exposure matrix.</b><br>
+  The segment pipeline maps firm disclosures into interpretable
+  sector-by-geography exposure structure.
+</td>
+<td width="50%">
+  <img src="docs/figures/full_catalog_exposure_time_series.png" alt="Average segment exposure over time" width="100%">
+  <br><b>Exposure evolution.</b><br>
+  Aggregate foreign-share and geographic concentration measures summarize how
+  disclosed segment exposure changes through the development sample.
+</td>
+</tr>
+<tr>
+<td width="50%">
+  <img src="docs/figures/full_catalog_sample_model_coverage.png" alt="Sample and model coverage" width="100%">
+  <br><b>Sample and model coverage.</b><br>
+  The full development panel, filing-date matched snapshots, and model
+  prediction rows are tracked before any holdout evaluation.
+</td>
+<td width="50%">
+  <img src="docs/figures/pipeline_architecture.svg" alt="Pipeline architecture" width="100%">
+  <br><b>Pipeline architecture.</b><br>
+  Compustat segments, CRSP/CCM returns, and timed macro releases feed the
+  tensor, model, robustness, table, and visual layers.
 </td>
 </tr>
 </table>
@@ -98,8 +127,8 @@ revision-safe wording is limited to the included FRED initial-release chain.
 
 ## Pipeline Architecture
 
-The public-safe SVG above is the primary architecture diagram. The Mermaid
-version below is kept as a text-native rendering of the same workflow.
+The Mermaid version below is a text-native rendering of the workflow shown in
+the visual results section.
 
 ```mermaid
 flowchart LR
@@ -119,8 +148,9 @@ flowchart LR
 ## Visual And Output Layer
 
 The visual layer is implemented as code and verified against private ignored
-artifacts. Public-safe aggregate schematics are tracked under `docs/figures/`;
-row-level WRDS-derived outputs and private dashboards are not tracked.
+artifacts. Reviewed aggregate figures are tracked under `docs/figures/`;
+row-level WRDS-derived outputs, machine-readable result tables, and private
+dashboards are not tracked.
 
 Implemented outputs include:
 
@@ -146,9 +176,10 @@ private outputs, tracked public figures, and regeneration commands.
 | Runner scripts | Yes | Require caller-provided project root and allocation id |
 | Tests and CI | Yes | Synthetic/code-level checks only |
 | Public configs and docs | Yes | No credentials or private paths |
+| Reviewed aggregate figures | Yes | README figures only; no row-level data |
 | Raw WRDS extracts | No | Excluded by license and policy |
 | Private Parquet/model caches | No | Excluded through `.gitignore` |
-| Generated tables/figures/dashboards | No | Verified privately, not redistributed |
+| Private dashboards and row-level outputs | No | Verified privately, not redistributed |
 | API keys or `.env` files | No | `.env.example` only |
 
 ## Skills Demonstrated

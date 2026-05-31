@@ -30,9 +30,12 @@ REQUIRED_PUBLIC_FILES = [
     "docs/github_release_checklist.md",
     "docs/index.md",
     "docs/methodology.md",
-    "docs/figures/diagnostic_snapshot.svg",
+    "docs/figures/full_catalog_exposure_time_series.png",
+    "docs/figures/full_catalog_model_rank_ic_comparison.png",
+    "docs/figures/full_catalog_model_spread_comparison.png",
+    "docs/figures/full_catalog_sample_model_coverage.png",
+    "docs/figures/full_catalog_sector_geography_matrix.png",
     "docs/figures/pipeline_architecture.svg",
-    "docs/figures/release_boundary.svg",
     "docs/output_inventory.md",
     "docs/release_audit.md",
     "docs/release_notes.md",
@@ -100,6 +103,13 @@ PRIVATE_DATA_LIKE_SUFFIXES = (
     ".xlsx",
     ".zip",
 )
+PUBLIC_DATA_LIKE_FILES = {
+    "docs/figures/full_catalog_exposure_time_series.png",
+    "docs/figures/full_catalog_model_rank_ic_comparison.png",
+    "docs/figures/full_catalog_model_spread_comparison.png",
+    "docs/figures/full_catalog_sample_model_coverage.png",
+    "docs/figures/full_catalog_sector_geography_matrix.png",
+}
 PRIVATE_TRACKED_PREFIXES = (
     ".codex/",
     "artifacts/",
@@ -151,7 +161,7 @@ def audit(root: Path) -> list[str]:
         for rel in tracked:
             if rel in PRIVATE_TRACKED_NAMES or rel.startswith(PRIVATE_TRACKED_PREFIXES):
                 findings.append(f"private path is tracked: {rel}")
-            if rel.lower().endswith(PRIVATE_DATA_LIKE_SUFFIXES):
+            if rel.lower().endswith(PRIVATE_DATA_LIKE_SUFFIXES) and rel not in PUBLIC_DATA_LIKE_FILES:
                 findings.append(f"private/binary data-like file is tracked: {rel}")
 
     gitignore = (root / ".gitignore").read_text(encoding="utf-8")

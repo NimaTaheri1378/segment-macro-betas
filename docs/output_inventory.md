@@ -14,8 +14,13 @@ Tracked public assets:
   root and allocation id through `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - Public configs, tests, documentation, CI, `.env.example`, and data-access
   notes.
-- Public-safe SVG figures under `docs/figures/` that summarize the pipeline,
-  diagnostic frontier, and release boundary without row-level data.
+- Reviewed aggregate README figures under `docs/figures/`:
+  `full_catalog_model_spread_comparison.png`,
+  `full_catalog_model_rank_ic_comparison.png`,
+  `full_catalog_sector_geography_matrix.png`,
+  `full_catalog_exposure_time_series.png`,
+  `full_catalog_sample_model_coverage.png`, and
+  `pipeline_architecture.svg`.
 
 Private ignored outputs verified locally:
 

@@ -34,9 +34,12 @@ class ReleaseAuditTests(unittest.TestCase):
     def test_release_audit_requires_public_scripts_and_docs(self) -> None:
         required = set(release_audit.REQUIRED_PUBLIC_FILES)
         self.assertIn("docs/output_inventory.md", required)
-        self.assertIn("docs/figures/diagnostic_snapshot.svg", required)
+        self.assertIn("docs/figures/full_catalog_model_spread_comparison.png", required)
+        self.assertIn("docs/figures/full_catalog_model_rank_ic_comparison.png", required)
+        self.assertIn("docs/figures/full_catalog_sector_geography_matrix.png", required)
+        self.assertIn("docs/figures/full_catalog_exposure_time_series.png", required)
+        self.assertIn("docs/figures/full_catalog_sample_model_coverage.png", required)
         self.assertIn("docs/figures/pipeline_architecture.svg", required)
-        self.assertIn("docs/figures/release_boundary.svg", required)
         self.assertIn("scripts/run_visual_pack.sh", required)
         self.assertIn("scripts/run_lgbm_benchmark.sh", required)
         self.assertIn("scripts/run_segment_set_model.sh", required)
@@ -47,6 +50,10 @@ class ReleaseAuditTests(unittest.TestCase):
         suffixes = release_audit.PRIVATE_DATA_LIKE_SUFFIXES
         for suffix in [".csv", ".html", ".png", ".parquet", ".pkl", ".xlsx"]:
             self.assertIn(suffix, suffixes)
+        self.assertIn(
+            "docs/figures/full_catalog_model_spread_comparison.png",
+            release_audit.PUBLIC_DATA_LIKE_FILES,
+        )
 
 
 if __name__ == "__main__":
