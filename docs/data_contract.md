@@ -29,3 +29,8 @@ The macro tensor builder expects a cached macro Parquet file under
 Optional timing columns `available_date`, `realtime_start`, or `release_date`
 are used for as-of joins; if none are present, the manifest records an
 observation-date fallback and `vintage_safe=false`.
+
+The factor robustness runner reads cached model prediction Parquet files under
+`artifacts/tables/<model_run_id>/` and benchmark factor columns from the
+private monthly panel. It writes gross and net long-short spreads, turnover
+diagnostics, and factor-alpha summaries under ignored artifacts and run logs.

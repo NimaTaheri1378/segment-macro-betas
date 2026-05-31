@@ -23,6 +23,11 @@ point-in-time foreign-sales exposure, evaluates next-month excess returns,
 computes monthly rank ICs, and estimates month-by-month cross-sectional
 slopes for the exposure variable.
 
+The factor-robustness layer evaluates model-sorted long-short portfolios
+against available benchmark factors, records Newey-West alpha diagnostics, and
+adds a simple turnover-cost adjustment. Factor returns are aligned to the
+realized next-month return date rather than the portfolio-formation date.
+
 The LightGBM layer uses an expanding time-series validation design. For each
 validation year, it trains only on earlier firm-months and predicts
 next-month excess returns for that validation year. The primary metric is the

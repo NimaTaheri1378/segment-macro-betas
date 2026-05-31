@@ -14,6 +14,7 @@ Implemented stages:
   filing-date ablation run `20260531T005001Z_lgbm_filing`.
 - Deep Sets segment-set model code, Slurm runner, and full-panel run
   `20260531T010832Z_set`.
+- Factor-alpha and turnover robustness runner from cached model predictions.
 - Visual pack and model-card generator, with private visual pack run
   `20260531T_visual_pack`.
 - Public-safe release audit script and release notes.
@@ -45,6 +46,23 @@ Latest private Deep Sets segment-set diagnostic:
 - `set_only`: mean rank IC `0.011294`, mean Q5-Q1 `0.001139`.
 - `set_plus_controls`: mean rank IC `-0.006154`, mean Q5-Q1 `0.002959`.
 
+Latest private factor robustness diagnostic:
+
+- Run: `20260531T_factor_robustness_clean`.
+- Panel run: `20260531T003936Z_panel_filing`.
+- Model runs: `20260531T005001Z_lgbm_filing` and `20260531T010832Z_set`.
+- Prediction rows evaluated: `5404000`.
+- Variants evaluated: `7`.
+- Spread-month rows: `1337`.
+- Factor months available: `239`.
+- Cost assumption: `10` bps per one-way turnover.
+- Best net Q5-Q1 variant: `lgbm:non_segment_controls`, mean net Q5-Q1
+  `0.006624`, t-stat `2.155836`.
+- Best factor-alpha variant: `lgbm:no_return_or_market`, gross monthly alpha
+  `0.006141`, t-stat `2.582860`.
+- Segment-only LightGBM robustness: mean net Q5-Q1 `0.003756`, t-stat
+  `1.920601`, gross monthly alpha `0.001023`.
+
 Latest private visual pack:
 
 - Run: `20260531T_visual_pack`.
@@ -60,9 +78,9 @@ Latest public release-prep check:
 - Hard-coded private Amarel path and allocation id removed from public runner
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
-- Local checks passed: release audit, public safety scan, and 32 unit tests.
+- Local checks passed: release audit, public safety scan, and 43 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 32 unit tests.
+  audit, public safety scan, and 43 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
@@ -101,6 +119,9 @@ Next stages:
 - Interpret the LightGBM ablation carefully: segment-only features rank returns
   well, while full/non-segment-control variants currently produce the stronger
   long-short spread.
+- Interpret factor robustness carefully: no-return-or-market and
+  no-market-factor LightGBM variants have the strongest alpha diagnostics,
+  while segment-only features remain weaker after factor adjustment.
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.

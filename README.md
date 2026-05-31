@@ -118,6 +118,15 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 `SET_DEVICE_TYPE=auto` uses CUDA for the PyTorch Deep Sets model whenever the
 allocation exposes a GPU.
 
+Run factor-alpha and turnover robustness from cached predictions:
+
+```bash
+PANEL_RUN_ID=20260531T003936Z_panel_filing \
+MODEL_RUNS=lgbm:20260531T005001Z_lgbm_filing,deepsets:20260531T010832Z_set \
+srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
+  --ntasks=1 --cpus-per-task=2 bash scripts/run_factor_robustness.sh
+```
+
 Generate the private visual pack and model card:
 
 ```bash

@@ -9,6 +9,7 @@ stages:
   - econometric_baselines
   - lgbm_benchmark
   - set_model_extension
+  - factor_robustness
   - visual_pack
   - public_safe_release
 
