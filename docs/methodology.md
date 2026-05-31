@@ -16,8 +16,7 @@ Primary research layers:
 - Monthly cross-sectional regressions.
 - Exposure-managed factors.
 - LightGBM tabular benchmark.
-- Deep Sets extension for segment sets, with Set Transformer left as a stretch
-  architecture.
+- Deep Sets and optional Set Transformer extensions for segment sets.
 
 The current baseline layer forms monthly quintile portfolios on
 point-in-time foreign-sales exposure, evaluates next-month excess returns,
@@ -47,10 +46,12 @@ standard return, factor, and accounting controls.
 The segment-set extension keeps each disclosed geography as a token rather
 than collapsing the snapshot immediately to summary statistics. The current
 benchmark uses a Deep Sets encoder with geography-token embeddings and
-revenue-share weights. It reports a `set_only` variant and a
-`set_plus_controls` variant under the same expanding yearly validation design
-as the tabular benchmarks. The PyTorch runner defaults to `SET_DEVICE_TYPE=auto`
-and uses CUDA when the allocation exposes a GPU.
+revenue-share weights. It reports `set_only` and `set_plus_controls` variants
+under the same expanding yearly validation design as the tabular benchmarks.
+The optional `set_transformer` variant replaces Deep Sets pooling with
+permutation-equivariant self-attention before pooling. The PyTorch runner
+defaults to `SET_DEVICE_TYPE=auto` and uses CUDA when the allocation exposes a
+GPU.
 
 The macro-tensor layer joins each segment token to cached macro states by
 canonical macro area. It uses `available_date`, `realtime_start`, or

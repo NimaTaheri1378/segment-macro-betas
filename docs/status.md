@@ -14,6 +14,7 @@ Implemented stages:
   filing-date ablation run `20260531T005001Z_lgbm_filing`.
 - Deep Sets segment-set model code, Slurm runner, and full-panel run
   `20260531T010832Z_set`.
+- Optional Set Transformer segment-set variant.
 - Factor-alpha and turnover robustness runner from cached model predictions.
 - Visual pack and model-card generator, with private visual pack run
   `20260531T_visual_pack`.
@@ -45,6 +46,10 @@ Latest private Deep Sets segment-set diagnostic:
 - Prediction rows per variant: `772000`.
 - `set_only`: mean rank IC `0.011294`, mean Q5-Q1 `0.001139`.
 - `set_plus_controls`: mean rank IC `-0.006154`, mean Q5-Q1 `0.002959`.
+- Optional `set_transformer` smoke run `20260531T_set_transformer_smoke`
+  completed on CUDA with 1 capped epoch, 772,000 prediction rows, mean rank IC
+  `0.001948`, and mean Q5-Q1 `0.001208`. Treat as a runtime check, not a full
+  scaled model result.
 
 Latest private factor robustness diagnostic:
 
@@ -133,4 +138,6 @@ Next stages:
 - Interpret the Deep Sets benchmark carefully: the simple set-only encoder has
   positive rank IC but weak long-short spread, and the first controls variant
   does not improve rank IC.
+- Scale the optional Set Transformer only after deciding that its weak bounded
+  smoke diagnostic is worth the extra runtime.
 - Push only after explicit user approval and a final clean audit.

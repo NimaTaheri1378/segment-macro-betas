@@ -29,6 +29,12 @@ CONTROL_FEATURES = FIRM_FEATURES + RETURN_FEATURES + MARKET_FEATURES
 SET_VARIANTS = {
     "set_only": [],
     "set_plus_controls": CONTROL_FEATURES,
+    "set_transformer": [],
+}
+SET_VARIANT_ARCHITECTURES = {
+    "set_only": "deep_sets",
+    "set_plus_controls": "deep_sets",
+    "set_transformer": "set_transformer",
 }
 SET_DEVICE_TYPES = {"auto", "cpu", "cuda"}
 
@@ -243,6 +249,49 @@ def fit_predict_deepsets(
                 pooled = torch.cat([pooled, controls], dim=1)
             return self.rho(pooled).squeeze(-1)
 
+    class SetTransformerRegressor(nn.Module):
+        def __init__(
+            self,
+            num_geo_tokens: int,
+            control_dim: int,
+            embedding_dim: int = 16,
+            hidden_dim: int = 64,
+            num_heads: int = 4,
+            num_layers: int = 2,
+        ):
+            super().__init__()
+            self.embedding = nn.Embedding(num_geo_tokens, embedding_dim, padding_idx=0)
+            self.input_proj = nn.Linear(embedding_dim + 1, hidden_dim)
+            layer = nn.TransformerEncoderLayer(
+                d_model=hidden_dim,
+                nhead=num_heads,
+                dim_feedforward=hidden_dim * 2,
+                dropout=0.10,
+                activation="gelu",
+                batch_first=True,
+            )
+            try:
+                self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers, enable_nested_tensor=False)
+            except TypeError:
+                self.encoder = nn.TransformerEncoder(layer, num_layers=num_layers)
+            self.rho = nn.Sequential(
+                nn.Linear(hidden_dim + control_dim, hidden_dim),
+                nn.ReLU(),
+                nn.Linear(hidden_dim, 1),
+            )
+
+        def forward(self, ids, revenue_shares, controls):
+            emb = self.embedding(ids)
+            token_x = torch.cat([emb, revenue_shares.unsqueeze(-1)], dim=-1)
+            token_repr = self.input_proj(token_x)
+            padding_mask = ids.eq(0)
+            encoded = self.encoder(token_repr, src_key_padding_mask=padding_mask)
+            mask = padding_mask.logical_not().unsqueeze(-1)
+            pooled = (encoded * mask).sum(dim=1) / mask.sum(dim=1).clamp_min(1)
+            if controls.shape[1] > 0:
+                pooled = torch.cat([pooled, controls], dim=1)
+            return self.rho(pooled).squeeze(-1)
+
     rng = np.random.default_rng(seed)
     torch.manual_seed(seed)
     torch.set_num_threads(1)
@@ -261,6 +310,7 @@ def fit_predict_deepsets(
     predictions_by_variant: dict[str, list[pd.DataFrame]] = {variant: [] for variant in variants}
 
     for variant in variants:
+        architecture = SET_VARIANT_ARCHITECTURES[variant]
         variant_controls = [feature for feature in SET_VARIANTS[variant] if feature in control_features]
         control_idx = [control_features.index(feature) for feature in variant_controls]
         variant_controls_all = controls_all[:, control_idx] if control_idx else np.zeros((len(frame), 0), dtype=np.float32)
@@ -288,7 +338,10 @@ def fit_predict_deepsets(
                 torch.as_tensor(y_train_scaled, dtype=torch.float32),
             )
             loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0)
-            model = DeepSetsRegressor(vocab_size, train_controls.shape[1]).to(device)
+            if architecture == "set_transformer":
+                model = SetTransformerRegressor(vocab_size, train_controls.shape[1]).to(device)
+            else:
+                model = DeepSetsRegressor(vocab_size, train_controls.shape[1]).to(device)
             opt = torch.optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=1e-4)
             loss_fn = nn.MSELoss()
             model.train()
@@ -333,12 +386,13 @@ def fit_predict_deepsets(
 def render_figures(figures_dir: Path, variant: str, spread: pd.DataFrame, rank_ic: pd.DataFrame) -> dict[str, str | None]:
     plt = setup_matplotlib()
     label = variant.replace("_", " ").title()
+    family = "Set Transformer" if SET_VARIANT_ARCHITECTURES.get(variant) == "set_transformer" else "Deep Sets"
     outputs: dict[str, str | None] = {"prediction_spread_figure": None, "rank_ic_figure": None}
     if len(spread):
         fig, ax = plt.subplots(figsize=(7.5, 4.2))
         ax.plot(spread["date"], spread["cum_q5_minus_q1"], color="#2A7F62", linewidth=2.0)
         ax.axhline(0, color="black", linewidth=0.8)
-        ax.set_title(f"Deep Sets {label}: Predicted Q5 - Q1")
+        ax.set_title(f"{family} {label}: Predicted Q5 - Q1")
         ax.set_ylabel("Cumulative return")
         fig.autofmt_xdate(rotation=25)
         fig.tight_layout()
@@ -353,7 +407,7 @@ def render_figures(figures_dir: Path, variant: str, spread: pd.DataFrame, rank_i
         ax.bar(ric["date"], ric["rank_ic"], color="#8E6C8A", alpha=0.45, width=20)
         ax.plot(ric["date"], ric["rolling_12m"], color="#273B47", linewidth=2.0)
         ax.axhline(0, color="black", linewidth=0.8)
-        ax.set_title(f"Deep Sets {label}: Monthly Rank IC")
+        ax.set_title(f"{family} {label}: Monthly Rank IC")
         ax.set_ylabel("Rank IC")
         fig.autofmt_xdate(rotation=25)
         fig.tight_layout()
@@ -377,6 +431,7 @@ def summarize_variant(variant: str, predictions: pd.DataFrame, tables_dir: Path,
     quintiles.to_csv(quintiles_path, index=False)
     figure_outputs = render_figures(figures_dir, variant, spread, rank_ic)
     checks = {
+        "architecture": SET_VARIANT_ARCHITECTURES[variant],
         "prediction_rows": int(len(predictions)),
         "rank_ic_months": int(len(rank_ic)),
         "quintile_months": int(spread["date"].nunique()) if len(spread) else 0,
@@ -393,7 +448,7 @@ def summarize_variant(variant: str, predictions: pd.DataFrame, tables_dir: Path,
         "quintile_returns": str(quintiles_path),
         **figure_outputs,
     }
-    return {"checks": checks, "outputs": outputs, "status": status}, {"variant": variant, "status": status, **checks}
+    return {"architecture": SET_VARIANT_ARCHITECTURES[variant], "checks": checks, "outputs": outputs, "status": status}, {"variant": variant, "status": status, **checks}
 
 
 def run_segment_set_model(
@@ -463,8 +518,9 @@ def run_segment_set_model(
         "panel_run_id": panel_run_id,
         "created_utc": now_iso(),
         "project_root": str(project_root),
-        "model": "deep_sets_segment_encoder",
+        "model": "segment_set_encoder",
         "variants": variants,
+        "variant_architectures": {variant: SET_VARIANT_ARCHITECTURES[variant] for variant in variants},
         "parameters": {
             "max_segments": int(max_segments),
             "max_vocab": int(max_vocab),

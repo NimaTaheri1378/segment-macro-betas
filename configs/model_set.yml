@@ -8,6 +8,7 @@ baseline: deep_sets
 variants:
   - set_only
   - set_plus_controls
+  - set_transformer
 training:
   validation: expanding_train_yearly_validation
   primary_metric: monthly_rank_ic
@@ -18,7 +19,6 @@ training:
   default_max_vocab: 512
 hardware:
   device_type: auto
-  gpu_policy: "use CUDA for PyTorch Deep Sets whenever torch.cuda.is_available()"
+  gpu_policy: "use CUDA for PyTorch set models whenever torch.cuda.is_available()"
 stretch:
-  - set_transformer
   - segment_macro_tokens_with_vintages

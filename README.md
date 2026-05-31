@@ -121,6 +121,8 @@ srun --overlap --jobid="$SMB_SLURM_JOB_ID" --chdir="$SMB_PROJECT_ROOT" \
 
 `SET_DEVICE_TYPE=auto` uses CUDA for the PyTorch Deep Sets model whenever the
 allocation exposes a GPU.
+Use `VARIANTS=set_transformer` for the optional self-attention segment-set
+encoder.
 
 Run factor-alpha and turnover robustness from cached predictions:
 

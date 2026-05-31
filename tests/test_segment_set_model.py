@@ -74,6 +74,7 @@ class SegmentSetModelTests(unittest.TestCase):
 
     def test_parse_variants_and_label_normalization(self) -> None:
         self.assertEqual(parse_variants("set_only,set_plus_controls"), ["set_only", "set_plus_controls"])
+        self.assertEqual(parse_variants("set_transformer"), ["set_transformer"])
         with self.assertRaises(ValueError):
             parse_variants("not_a_variant")
         self.assertEqual(normalize_geo_label(" us "), "US")
