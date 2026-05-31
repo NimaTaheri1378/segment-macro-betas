@@ -1,9 +1,11 @@
 import unittest
+from types import SimpleNamespace
 
 import pandas as pd
 
 from segment_macro_betas.segment_set_model import (
     build_geo_vocab,
+    dataloader_kwargs_for_device,
     build_panel_frame,
     encode_panel_sets,
     normalize_geo_label,
@@ -84,6 +86,10 @@ class SegmentSetModelTests(unittest.TestCase):
         self.assertEqual(parse_device_type("CUDA"), "cuda")
         with self.assertRaises(ValueError):
             parse_device_type("tpu")
+
+    def test_cuda_loader_kwargs_pin_memory(self) -> None:
+        self.assertTrue(dataloader_kwargs_for_device(SimpleNamespace(type="cuda"))["pin_memory"])
+        self.assertFalse(dataloader_kwargs_for_device(SimpleNamespace(type="cpu"))["pin_memory"])
 
 
 if __name__ == "__main__":

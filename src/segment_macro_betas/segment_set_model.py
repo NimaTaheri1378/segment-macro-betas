@@ -70,6 +70,10 @@ def select_torch_device(torch_module, device_type: str):
     return torch_module.device("cuda" if torch_module.cuda.is_available() else "cpu")
 
 
+def dataloader_kwargs_for_device(device: Any) -> dict[str, Any]:
+    return {"num_workers": 0, "pin_memory": getattr(device, "type", "") == "cuda"}
+
+
 def normalize_geo_label(value: Any) -> str:
     if pd.isna(value):
         return "UNKNOWN"
@@ -303,7 +307,9 @@ def fit_predict_deepsets(
         "torch_device": str(device),
         "cuda_available": bool(torch.cuda.is_available()),
         "cuda_device_name": torch.cuda.get_device_name(0) if torch.cuda.is_available() else None,
+        "pin_memory": device.type == "cuda",
     }
+    loader_kwargs = dataloader_kwargs_for_device(device)
     dates = pd.to_datetime(frame["date"])
     target = frame[TARGET].to_numpy(dtype=np.float32)
     controls_all = frame[control_features].to_numpy(dtype=np.float32) if control_features else np.zeros((len(frame), 0), dtype=np.float32)
@@ -337,7 +343,7 @@ def fit_predict_deepsets(
                 torch.as_tensor(train_controls, dtype=torch.float32),
                 torch.as_tensor(y_train_scaled, dtype=torch.float32),
             )
-            loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, num_workers=0)
+            loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, **loader_kwargs)
             if architecture == "set_transformer":
                 model = SetTransformerRegressor(vocab_size, train_controls.shape[1]).to(device)
             else:
@@ -362,7 +368,7 @@ def fit_predict_deepsets(
                 torch.as_tensor(shares[val_idx], dtype=torch.float32),
                 torch.as_tensor(val_controls, dtype=torch.float32),
             )
-            val_loader = DataLoader(val_ds, batch_size=batch_size * 2, shuffle=False, num_workers=0)
+            val_loader = DataLoader(val_ds, batch_size=batch_size * 2, shuffle=False, **loader_kwargs)
             pred_chunks: list[np.ndarray] = []
             with torch.no_grad():
                 for batch_ids, batch_shares, batch_controls in val_loader:

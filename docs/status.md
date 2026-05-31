@@ -95,9 +95,9 @@ Latest public release-prep check:
   scripts and docs.
 - Runners require `SMB_PROJECT_ROOT` and `SMB_SLURM_JOB_ID`.
 - CI now runs the public safety scan, release audit, and unit tests.
-- Local checks passed: release audit, public safety scan, and 53 unit tests.
+- Local checks passed: release audit, public safety scan, and 54 unit tests.
 - Allocation-backed checks passed on the active compute environment: release
-  audit, public safety scan, and 53 unit tests.
+  audit, public safety scan, and 54 unit tests.
 - Macro-engine runner dry run `20260531T_release_macro_dry` completed with
   status `dry_run_ok`; no API credentials were present and no API calls were
   executed.
@@ -126,9 +126,13 @@ Latest GPU modeling code status:
   recording any CPU fallback in the manifest.
 - Deep Sets runner now has `SET_DEVICE_TYPE=auto`, recording the selected
   PyTorch device and CUDA device name in the manifest.
-- Allocation smoke check: PyTorch selected `cuda` on the A100. The current
-  `ml_core` LightGBM build does not enable the GPU tree learner, so LightGBM
-  auto mode records a CPU fallback.
+- The PyTorch set-model DataLoader pins host memory when CUDA is selected.
+- Allocation probe `20260531T_gpu_probe`: PyTorch selected `cuda` on the A100
+  and completed a tiny CUDA matmul. The current `ml_core` LightGBM build does
+  not enable the GPU tree learner, so LightGBM auto mode records a CPU
+  fallback.
+- Allocation gate `20260531T_gpu_gate2`: CUDA assertion passed with
+  `pin_memory=true` for the set-model DataLoader.
 
 Private artifacts remain ignored:
 
