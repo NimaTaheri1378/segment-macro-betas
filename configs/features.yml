@@ -14,5 +14,7 @@ segment_exposures:
     - "segment_sales_sum"
 
 point_in_time:
-  baseline_activation_rule: "segment source date plus one calendar day for smoke; SEC filing-date activation in full pipeline"
+  baseline_activation_rule: "segment activation date equals Compustat pdate/fdate plus one day when available; otherwise segment source date plus one day"
   no_lookahead_rule: "features dated t may only predict returns after the activation date"
+  filing_date_source_priority: ["pdate", "fdate", "srcdate_fallback"]
+  activation_lag_days: 1

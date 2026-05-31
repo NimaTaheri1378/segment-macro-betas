@@ -25,6 +25,13 @@ def read_shards(raw_root: Path, dataset: str) -> pd.DataFrame:
     return pd.concat((pd.read_parquet(path) for path in paths), ignore_index=True)
 
 
+def read_optional_shards(raw_root: Path, dataset: str) -> pd.DataFrame | None:
+    paths = sorted(raw_root.glob(f"year=*/{dataset}.parquet"))
+    if not paths:
+        return None
+    return pd.concat((pd.read_parquet(path) for path in paths), ignore_index=True)
+
+
 def clean_segments(segments: pd.DataFrame) -> pd.DataFrame:
     df = segments.copy()
     for col in ("srcdate", "datadate"):
@@ -38,7 +45,7 @@ def clean_segments(segments: pd.DataFrame) -> pd.DataFrame:
     df = df[df["srcdate"].notna() & df["segment_sales"].notna() & (df["segment_sales"] > 0)].copy()
     grouped = (
         df.groupby(["gvkey", "srcdate", "geo_label"], dropna=False, as_index=False)
-        .agg(segment_sales=("segment_sales", "sum"), segment_rows=("sid", "count"))
+        .agg(segment_sales=("segment_sales", "sum"), segment_rows=("sid", "count"), segment_datadate=("datadate", "max"))
     )
     grouped["segment_sales_sum"] = grouped.groupby(["gvkey", "srcdate"])["segment_sales"].transform("sum")
     grouped["revenue_share"] = grouped["segment_sales"] / grouped["segment_sales_sum"]
@@ -50,6 +57,7 @@ def clean_segments(segments: pd.DataFrame) -> pd.DataFrame:
             {
                 "gvkey": gvkey,
                 "segment_srcdate": srcdate,
+                "segment_datadate": g["segment_datadate"].max(),
                 "segment_sales_sum": float(g["segment_sales_sum"].max()),
                 "geo_count": int(g["geo_label"].nunique(dropna=True)),
                 "foreign_share": float(g.loc[~g["is_domestic"], "revenue_share"].sum()),
@@ -61,6 +69,61 @@ def clean_segments(segments: pd.DataFrame) -> pd.DataFrame:
         )
     snapshots = pd.DataFrame(rows)
     return snapshots.sort_values(["gvkey", "segment_srcdate"]).drop_duplicates(["gvkey", "segment_srcdate"], keep="last")
+
+
+def prepare_filing_dates(filing_dates: pd.DataFrame | None) -> pd.DataFrame | None:
+    if filing_dates is None or filing_dates.empty:
+        return None
+    df = filing_dates.copy()
+    df["gvkey"] = df["gvkey"].astype(str)
+    for col in ("datadate", "fdate", "pdate", "filing_date"):
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
+    df = df[df["datadate"].notna()].copy()
+    if "filing_date" not in df.columns:
+        fdate = df["fdate"] if "fdate" in df.columns else pd.Series(pd.NaT, index=df.index)
+        pdate = df["pdate"] if "pdate" in df.columns else pd.Series(pd.NaT, index=df.index)
+        df["filing_date"] = pdate.where(pdate.notna(), fdate)
+    if "filing_date_source" not in df.columns:
+        df["filing_date_source"] = "missing"
+        if "pdate" in df.columns:
+            df.loc[df["pdate"].notna(), "filing_date_source"] = "pdate"
+        if "fdate" in df.columns:
+            df.loc[(df["filing_date_source"] == "missing") & df["fdate"].notna(), "filing_date_source"] = "fdate"
+    return df.sort_values(["gvkey", "datadate", "filing_date"]).drop_duplicates(["gvkey", "datadate"], keep="first")
+
+
+def apply_segment_activation_dates(
+    snapshots: pd.DataFrame,
+    filing_dates: pd.DataFrame | None,
+    *,
+    activation_lag_days: int = 1,
+) -> tuple[pd.DataFrame, dict[str, Any]]:
+    out = snapshots.copy()
+    out["segment_datadate"] = pd.to_datetime(out["segment_datadate"], errors="coerce")
+    out["segment_srcdate"] = pd.to_datetime(out["segment_srcdate"], errors="coerce")
+    filings = prepare_filing_dates(filing_dates)
+    if filings is not None and not filings.empty:
+        out = out.merge(
+            filings[["gvkey", "datadate", "filing_date", "filing_date_source"]],
+            left_on=["gvkey", "segment_datadate"],
+            right_on=["gvkey", "datadate"],
+            how="left",
+        ).drop(columns=["datadate"], errors="ignore")
+    else:
+        out["filing_date"] = pd.NaT
+        out["filing_date_source"] = "missing"
+    out["segment_activation_base_date"] = out["filing_date"].where(out["filing_date"].notna(), out["segment_srcdate"])
+    out["segment_activation_source"] = out["filing_date_source"].where(out["filing_date"].notna(), "srcdate_fallback")
+    out["segment_activation_date"] = out["segment_activation_base_date"] + pd.to_timedelta(activation_lag_days, unit="D")
+    checks = {
+        "segment_snapshots": int(len(out)),
+        "filing_date_matched_snapshots": int(out["filing_date"].notna().sum()),
+        "filing_date_match_rate": float(out["filing_date"].notna().mean()) if len(out) else None,
+        "activation_lag_days": int(activation_lag_days),
+        "activation_source_counts": out["segment_activation_source"].value_counts(dropna=False).to_dict(),
+    }
+    return out, checks
 
 
 def prepare_crsp(crsp: pd.DataFrame) -> pd.DataFrame:
@@ -125,8 +188,21 @@ def prepare_funda(funda: pd.DataFrame) -> pd.DataFrame:
     df = funda.copy()
     df["gvkey"] = df["gvkey"].astype(str)
     df["datadate"] = pd.to_datetime(df["datadate"], errors="coerce")
+    for col in ("fdate", "pdate"):
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors="coerce")
     df = df[df["datadate"].notna()].copy()
-    df["funda_avail_date"] = df["datadate"] + pd.DateOffset(months=6)
+    fallback_date = df["datadate"] + pd.DateOffset(months=6)
+    if "pdate" in df.columns or "fdate" in df.columns:
+        pdate = df["pdate"] if "pdate" in df.columns else pd.Series(pd.NaT, index=df.index)
+        fdate = df["fdate"] if "fdate" in df.columns else pd.Series(pd.NaT, index=df.index)
+        df["funda_avail_date"] = pdate.where(pdate.notna(), fdate).where(lambda s: s.notna(), fallback_date)
+        df["funda_avail_source"] = "fallback_6m"
+        df.loc[pdate.notna(), "funda_avail_source"] = "pdate"
+        df.loc[pdate.isna() & fdate.notna(), "funda_avail_source"] = "fdate"
+    else:
+        df["funda_avail_date"] = fallback_date
+        df["funda_avail_source"] = "fallback_6m"
     for col in ("at", "sale", "revt", "ceq", "ni", "capx", "xrd", "dltt", "dlc", "prcc_f", "csho"):
         if col in df.columns:
             df[col] = pd.to_numeric(df[col], errors="coerce")
@@ -166,20 +242,23 @@ def build_panel(project_root: Path, raw_run_id: str, run_id: str) -> dict[str, A
     ccm = read_shards(raw_root, "ccm_links")
     funda = read_shards(raw_root, "compustat_funda")
     factors = read_shards(raw_root, "factors_monthly")
+    filing_dates = read_optional_shards(raw_root, "compustat_filing_dates")
     manifest["inputs"] = {
         "segments_rows": int(len(segments)),
         "crsp_rows": int(len(crsp)),
         "ccm_rows": int(len(ccm)),
         "funda_rows": int(len(funda)),
         "factors_rows": int(len(factors)),
+        "filing_date_rows": int(len(filing_dates)) if filing_dates is not None else 0,
     }
 
-    snapshots = clean_segments(segments)
+    snapshots_raw = clean_segments(segments)
+    snapshots, activation_checks = apply_segment_activation_dates(snapshots_raw, filing_dates)
     crsp_prepped = prepare_crsp(crsp)
     ccm_prepped = prepare_ccm(ccm)
     linked = link_crsp_to_gvkey(crsp_prepped, ccm_prepped)
-    panel = merge_asof_by_key(linked, snapshots, by="gvkey", left_on="date", right_on="segment_srcdate")
-    panel = panel[panel["segment_srcdate"].notna()].copy()
+    panel = merge_asof_by_key(linked, snapshots, by="gvkey", left_on="date", right_on="segment_activation_date")
+    panel = panel[panel["segment_activation_date"].notna()].copy()
 
     funda_prepped = prepare_funda(funda)
     panel = merge_asof_by_key(panel, funda_prepped, by="gvkey", left_on="date", right_on="funda_avail_date")
@@ -205,6 +284,12 @@ def build_panel(project_root: Path, raw_run_id: str, run_id: str) -> dict[str, A
         "mktcap",
         "vol",
         "segment_srcdate",
+        "segment_datadate",
+        "segment_activation_base_date",
+        "segment_activation_date",
+        "segment_activation_source",
+        "filing_date",
+        "filing_date_source",
         "foreign_share",
         "domestic_share",
         "geo_hhi",
@@ -220,6 +305,8 @@ def build_panel(project_root: Path, raw_run_id: str, run_id: str) -> dict[str, A
         "xrd",
         "dltt",
         "dlc",
+        "funda_avail_date",
+        "funda_avail_source",
         "mktrf",
         "smb",
         "hml",
@@ -249,9 +336,10 @@ def build_panel(project_root: Path, raw_run_id: str, run_id: str) -> dict[str, A
     summary.to_csv(tmp_summary, index=False)
     tmp_summary.replace(summary_path)
 
-    activation_violations = int((panel["date"] <= panel["segment_srcdate"]).sum()) if len(panel) else 0
+    activation_violations = int((panel["date"] <= panel["segment_activation_date"]).sum()) if len(panel) else 0
     manifest["checks"] = {
         "snapshot_rows": int(len(snapshots)),
+        **activation_checks,
         "linked_crsp_rows": int(len(linked)),
         "panel_rows": int(len(panel)),
         "unique_gvkeys": int(panel["gvkey"].nunique()) if len(panel) else 0,

@@ -124,6 +124,8 @@ select
     fyr,
     tic,
     conm,
+    fdate,
+    pdate,
     at,
     sale,
     revt,

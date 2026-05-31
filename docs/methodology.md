@@ -4,9 +4,11 @@ The core panel is a firm-month panel. Each firm-month inherits the latest
 publicly usable geographic segment map, converts segment sales to geography
 weights, and merges those weights to returns and controls.
 
-The smoke pipeline uses segment source dates as a conservative first activation
-check. The full pipeline will replace this with SEC filing acceptance dates
-where the WRDS segment tables do not expose a direct public-availability date.
+The panel activates segment snapshots only after the inferred public date. The
+preferred activation clock is Compustat `pdate`/`fdate` matched by `gvkey` and
+segment fiscal `datadate`, plus one day. When no filing-date match exists, the
+pipeline falls back to the WRDS segment `srcdate` plus one day and records that
+source in the manifest.
 
 Primary research layers:
 

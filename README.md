@@ -58,10 +58,18 @@ srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Beta
   --ntasks=1 --cpus-per-task=1 scripts/run_build_panel.sh
 ```
 
+Add the targeted Compustat filing-date supplement before rebuilding the panel:
+
+```bash
+RAW_RUN_ID=20260530T233446Z EXECUTE=1 \
+srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
+  --ntasks=1 --cpus-per-task=1 scripts/run_filing_dates_extract.sh
+```
+
 Run first-pass portfolio and cross-sectional baselines:
 
 ```bash
-PANEL_RUN_ID=20260530T234643Z \
+PANEL_RUN_ID=20260531T003936Z_panel_filing \
 srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
   --ntasks=1 --cpus-per-task=1 scripts/run_baselines.sh
 ```
@@ -69,7 +77,7 @@ srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Beta
 Run the LightGBM expanding-window benchmark:
 
 ```bash
-PANEL_RUN_ID=20260530T234643Z \
+PANEL_RUN_ID=20260531T003936Z_panel_filing \
 srun --overlap --jobid=5752806 --chdir="/scratch/nt612/Github/Segment Macro Betas" \
   --ntasks=1 --cpus-per-task=8 scripts/run_lgbm_benchmark.sh
 ```

@@ -3,6 +3,7 @@ stages:
   - smoke_panel
   - full_wrds_extract
   - macro_engine
+  - filing_date_activation
   - point_in_time_features
   - econometric_baselines
   - lgbm_benchmark
@@ -10,7 +11,7 @@ stages:
   - visual_pack
   - public_safe_release
 
-current_gate: lgbm_benchmark
+current_gate: segment_set_model_extension
 do_not_enter_full_scale_until:
   - schema_map_reviewed
   - smoke_panel_manifest_clean

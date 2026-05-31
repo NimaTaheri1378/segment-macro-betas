@@ -15,3 +15,10 @@ Selected sources:
 Private extraction output is written as Parquet shards under `data/raw/<run_id>/`.
 Every extraction run writes compact logs, a JSON manifest, and a Markdown report
 under `runs/<run_id>/`.
+
+The filing-date supplement writes `compustat_filing_dates.parquet` shards next
+to the raw annual shards. It contains only `gvkey`, `datadate`, fiscal-year
+fields, Compustat `pdate`/`fdate`, and the derived `filing_date`. Panel
+construction uses this date plus one day as the preferred segment activation
+timestamp, falling back to `srcdate` plus one day when no filing-date match is
+available.
